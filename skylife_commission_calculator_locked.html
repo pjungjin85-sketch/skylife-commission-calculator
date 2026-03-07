@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKY Life 모바일 수수료 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #003087;
+  --sky-light: #1a4fa0;
+  --sky-pale: #e8f0fe;
+  --sky-mid: #c5d8f6;
+  --accent: #ff5722;
+  --gold: #ffb300;
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --text: #1a1a2e;
+  --muted: #6b7a99;
+  --border: #dde3ef;
+  --radius: 14px;
+  --shadow: 0 2px 16px rgba(0,48,135,0.09);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── 잠금 화면 ── */
+#lock-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: linear-gradient(135deg, #001a5c 0%, #003087 55%, #0055b3 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+#lock-overlay.hidden { display: none; }
+.lock-box {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 24px;
+  padding: 48px 40px 40px;
+  width: 100%; max-width: 360px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+.lock-icon { font-size: 48px; margin-bottom: 16px; display: block; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.lock-title { color:#fff; font-size:20px; font-weight:900; margin-bottom:4px; }
+.lock-sub { color:rgba(255,255,255,0.5); font-size:12px; margin-bottom:32px; }
+.lock-input-wrap { position:relative; margin-bottom:14px; }
+.lock-input {
+  width:100%; padding:14px 48px 14px 18px;
+  border-radius:12px; border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.1); color:#fff; font-size:18px;
+  font-family:'DM Mono',monospace; letter-spacing:4px;
+  outline:none; text-align:center;
+  transition: border-color 0.2s, background 0.2s;
+}
+.lock-input::placeholder { letter-spacing:2px; font-size:13px; color:rgba(255,255,255,0.35); }
+.lock-input:focus { border-color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.15); }
+.lock-input.error { border-color:#ff5252; animation:shake 0.4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+.toggle-pw { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; font-size:18px; transition:color 0.15s; }
+.toggle-pw:hover { color:#fff; }
+.lock-btn { width:100%; padding:14px; background:#fff; color:#003087; border:none; border-radius:12px; font-size:15px; font-weight:800; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all 0.18s; }
+.lock-btn:hover { background:#e8f0fe; transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+.lock-error { color:#ff7070; font-size:12px; margin-top:10px; height:16px; }
+.lock-footer { margin-top:28px; color:rgba(255,255,255,0.2); font-size:10px; letter-spacing:1px; }
+
+/* ── 헤더 ── */
+.header {
+  background: linear-gradient(135deg, #003087 0%, #1a4fa0 50%, #0077cc 100%);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content:''; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.header-left { position:relative; }
+.header-badge { display:inline-block; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; font-size:10px; font-weight:600; letter-spacing:2px; padding:3px 10px; border-radius:20px; margin-bottom:6px; text-transform:uppercase; }
+.header h1 { color:#fff; font-size:clamp(16px,3vw,22px); font-weight:900; letter-spacing:-0.5px; }
+.header h1 span { color:#7dd3fc; }
+.header-right { position:relative; flex-shrink:0; }
+
+/* 헤더 우측 미니 결과창 */
+.header-result {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 14px;
+  padding: 14px 20px;
+  min-width: 200px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+.hr-label { font-size:10px; color:rgba(255,255,255,0.55); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px; }
+.hr-amount { font-size:28px; font-weight:900; color:#e60000; font-family:'DM Mono',monospace; letter-spacing:-1px; line-height:1; text-shadow: 0 0 10px rgba(220,0,0,0.35); }
+.hr-amount span { font-size:14px; font-weight:600; color:#e60000; }
+.hr-amount.empty { font-size:16px; color:rgba(255,255,255,0.3); font-family:'Noto Sans KR',sans-serif; font-weight:400; }
+.hr-grade { font-size:11px; color:#ffb300; margin-top:4px; font-weight:600; min-height:16px; }
+.header-name { font-size:11px; color:rgba(255,255,255,0.55); margin-bottom:6px; font-weight:500; letter-spacing:0.3px; }
+
+/* ── 메인 컨테이너 ── */
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+
+/* ── 전체 2열 레이아웃 ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+@media(max-width:800px){ .main-grid { grid-template-columns:1fr; } }
+
+/* 왼쪽 컬럼 */
+.left-col { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── 상단 3단계 가로 배치 ── */
+.top-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media(max-width:700px){ .top-steps { grid-template-columns:1fr; } }
+
+.step-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow 0.2s, opacity 0.2s;
+}
+.step-card.locked { opacity:0.4; pointer-events:none; }
+
+.step-header {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px;
+  background: var(--sky-pale);
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  width:26px; height:26px; background:var(--sky); color:#fff;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; flex-shrink:0;
+}
+.step-label { font-size:13px; font-weight:700; color:var(--sky); }
+.step-body { padding:14px; }
+
+/* 옵션 버튼 */
+.option-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.opt-btn {
+  flex:1 1 auto; min-width:120px;
+  padding:10px 14px;
+  border:2px solid var(--border); border-radius:10px;
+  background:#fff; cursor:pointer; text-align:left;
+  transition:all 0.15s; position:relative;
+}
+.opt-btn:hover { border-color:var(--sky-light); background:var(--sky-pale); }
+.opt-btn.selected {
+  border-color:var(--sky);
+  background:linear-gradient(135deg, var(--sky-pale), #dbeafe);
+  box-shadow:0 0 0 3px rgba(0,48,135,0.10);
+}
+.opt-btn.selected::after { content:'✓'; position:absolute; top:6px; right:8px; color:var(--sky); font-weight:800; font-size:12px; }
+.opt-title { font-size:13px; font-weight:700; color:var(--text); display:block; margin-bottom:1px; }
+.opt-desc  { font-size:10px; color:var(--muted); display:block; }
+.opt-btn.selected .opt-title { color:var(--sky); }
+
+/* ── 하단 요금제 카드 ── */
+.plan-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.plan-card.locked { opacity:0.4; pointer-events:none; }
+
+/* 상품군 탭 */
+.group-tabs {
+  display:flex; flex-wrap:wrap; gap:0;
+  border-bottom:1px solid var(--border);
+  background:#f8faff;
+  padding:8px 12px 0;
+}
+.group-tab {
+  padding:7px 12px;
+  font-size:12px; font-weight:700;
+  color:var(--muted);
+  border:none; background:none;
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all 0.15s;
+  margin-bottom:-1px;
+}
+.group-tab:hover { color:var(--sky-light); }
+.group-tab.active {
+  color:var(--sky);
+  border-bottom-color:var(--sky);
+  background:var(--card);
+}
+
+/* 요금제 리스트 */
+.plan-list-wrap { padding:14px; }
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+  gap:7px;
+}
+.plan-btn {
+  padding:10px 12px;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  background:#fff; cursor:pointer; text-align:left;
+  transition:all 0.13s;
+}
+.plan-btn:hover { border-color:var(--sky-light); background:var(--sky-pale); }
+.plan-btn.selected {
+  border-color:var(--sky);
+  background:linear-gradient(135deg,var(--sky-pale),#dbeafe);
+  box-shadow:0 0 0 2px rgba(0,48,135,0.10);
+}
+.plan-name { font-size:11px; font-weight:600; color:var(--text); display:block; margin-bottom:4px; line-height:1.3; }
+.plan-btn.selected .plan-name { color:var(--sky); }
+.plan-price { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
+.plan-badge { display:inline-block; font-size:8px; font-weight:700; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; }
+.badge-rs  { background:#e0f2fe; color:#0369a1; }
+.badge-rm  { background:#f0fdf4; color:#166534; }
+.badge-sky { background:#fef3c7; color:#92400e; }
+
+/* ── 결과 패널 ── */
+.result-panel {
+  background: linear-gradient(160deg, #002070, #003087, #1a4fa0);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  color:#fff;
+  position: sticky;
+  top: 16px;
+  box-shadow: 0 8px 40px rgba(0,48,135,0.28);
+}
+.result-sec-title {
+  font-size:10px; font-weight:700; letter-spacing:2px;
+  text-transform:uppercase; color:rgba(255,255,255,0.5);
+  margin-bottom:14px;
+}
+.result-rows { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.result-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:9px 12px;
+  background:rgba(255,255,255,0.08);
+  border-radius:9px; border:1px solid rgba(255,255,255,0.11);
+}
+.result-row.hl { background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.22); }
+.result-row.grade-row { background:rgba(255,179,0,0.13); border-color:rgba(255,179,0,0.35); }
+.grade-val { color:#ffb300 !important; }
+.r-label { font-size:11px; color:rgba(255,255,255,0.75); line-height:1.4; }
+.r-val { font-size:13px; font-weight:700; font-family:'DM Mono',monospace; color:#fff; white-space:nowrap; margin-left:8px; }
+.r-val.zero { color:rgba(255,255,255,0.3); }
+.result-divider { height:1px; background:rgba(255,255,255,0.13); margin:14px 0; }
+.result-total-label { font-size:10px; color:rgba(255,255,255,0.55); margin-bottom:3px; }
+.result-total { font-size:32px; font-weight:900; font-family:'DM Mono',monospace; color:#ff6060; letter-spacing:-1px; }
+.result-total span { font-size:16px; font-weight:600; color:#ff6060; }
+
+/* 그레이드 섹션 */
+.grade-section-inner { margin-top:18px; }
+.grade-divider { height:1px; background:rgba(255,255,255,0.12); margin-bottom:14px; }
+.grade-sec-title { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:10px; }
+
+/* 슬라이더 */
+.grade-slider-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.grade-slider-label { font-size:11px; color:rgba(255,255,255,0.6); white-space:nowrap; }
+.grade-count-badge { font-size:13px; font-weight:700; font-family:'DM Mono',monospace; color:#7dd3fc; white-space:nowrap; }
+input[type=range] {
+  flex:1; -webkit-appearance:none; height:5px; border-radius:3px;
+  background:linear-gradient(to right,#7dd3fc 0%,#7dd3fc var(--pct,0%),rgba(255,255,255,0.2) var(--pct,0%),rgba(255,255,255,0.2) 100%);
+  outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:17px; height:17px; border-radius:50%;
+  background:#7dd3fc; border:2px solid #fff;
+  box-shadow:0 2px 6px rgba(0,0,0,0.25); transition:transform 0.13s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+.grade-bars { display:flex; gap:4px; margin-bottom:8px; }
+.grade-bar {
+  flex:1; padding:6px 4px; border-radius:7px;
+  border:1px solid rgba(255,255,255,0.15);
+  text-align:center; transition:all 0.18s;
+  cursor:pointer;
+}
+.grade-bar:hover { border-color:rgba(255,179,0,0.5); background:rgba(255,179,0,0.08); }
+.grade-bar.active { border-color:#ffb300; background:rgba(255,179,0,0.15); }
+.gb-label { font-size:9px; color:rgba(255,255,255,0.45); display:block; }
+.gb-fee   { font-size:10px; font-weight:700; color:rgba(255,255,255,0.7); display:block; margin-top:1px; }
+.grade-bar.active .gb-label { color:#ffb300; }
+.grade-bar.active .gb-fee   { color:#ffb300; }
+
+.grade-result-box { background:rgba(255,179,0,0.12); border:1px solid rgba(255,179,0,0.3); border-radius:9px; padding:10px 12px; }
+.grade-result-box .gr-title { font-size:10px; color:rgba(255,255,255,0.5); margin-bottom:6px; }
+.grade-result-table { width:100%; border-collapse:collapse; }
+.grade-result-table td { padding:3px 0; font-size:11px; color:rgba(255,255,255,0.75); }
+.grade-result-table td:last-child { text-align:right; font-weight:700; color:#ffb300; font-family:'DM Mono',monospace; }
+.grade-note-txt { font-size:10px; color:rgba(255,255,255,0.35); margin-top:8px; line-height:1.5; }
+
+.disclaimer { margin-top:14px; padding:8px 10px; background:rgba(255,255,255,0.05); border-radius:7px; font-size:9px; color:rgba(255,255,255,0.35); line-height:1.7; }
+
+.reset-btn {
+  display:block; width:100%; padding:10px;
+  margin-top:12px; background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.18); border-radius:9px;
+  color:rgba(255,255,255,0.6); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.15s;
+}
+.reset-btn:hover { background:rgba(255,255,255,0.15); color:#fff; }
+
+.empty-state { text-align:center; padding:24px 0; color:rgba(255,255,255,0.3); font-size:12px; }
+.empty-icon  { font-size:28px; margin-bottom:8px; }
+
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.fade-in { animation:fadeInUp 0.25s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- ══ 잠금 화면 ══ -->
+<div id="lock-overlay">
+  <div class="lock-box">
+    <span class="lock-icon">🔐</span>
+    <div class="lock-title">SKY Life 수수료 계산기</div>
+    <div class="lock-sub">접근 권한이 필요한 페이지입니다</div>
+    <div class="lock-input-wrap">
+      <input class="lock-input" id="pw-input" type="password"
+             placeholder="비밀번호 입력"
+             onkeydown="if(event.key==='Enter')checkPw()"
+             oninput="document.getElementById('lock-error').textContent=''"
+             autocomplete="off">
+      <button class="toggle-pw" id="toggle-btn" onclick="togglePw()">👁</button>
+    </div>
+    <button class="lock-btn" onclick="checkPw()">입장하기</button>
+    <div class="lock-error" id="lock-error"></div>
+    <div class="lock-footer">2026 · 03월 영업정책 · 내부용</div>
+  </div>
+</div>
+
+<!-- ══ 헤더 ══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-name">영업총괄 영업기획실 무선사업팀 박정진</div>
+    <div class="header-badge">2026 · 03월 1차 영업정책</div>
+    <h1>SKY Life 모바일 <span>수수료 계산기</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="header-result">
+      <div class="hr-label">건당 예상 수수료</div>
+      <div class="hr-amount empty" id="hr-amount">조건 선택 중…</div>
+      <div class="hr-grade" id="hr-grade"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 본문 ══ -->
+<div class="container">
+  <div class="main-grid">
+
+    <!-- 왼쪽: 1~4단계 -->
+    <div class="left-col">
+
+      <!-- 상단 3단계 가로 -->
+      <div class="top-steps">
+
+        <!-- STEP 1 -->
+        <div class="step-card" id="step1">
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div class="step-label">대리점 유형</div>
+          </div>
+          <div class="step-body">
+            <div class="option-grid">
+              <button class="opt-btn" data-type="agency" onclick="selectAgency('소매')">
+                <span class="opt-title">📱 소매</span>
+                <span class="opt-desc">일반 소매 채널</span>
+              </button>
+              <button class="opt-btn" data-type="agency" onclick="selectAgency('CSC')">
+                <span class="opt-title">🏢 CSC</span>
+                <span class="opt-desc">고객센터 특화</span>
+              </button>
+              <button class="opt-btn" data-type="agency" onclick="selectAgency('도매')">
+                <span class="opt-title">🔄 도매</span>
+                <span class="opt-desc">전문 도매 채널</span>
+              </button>
+              <button class="opt-btn" data-type="agency" onclick="selectAgency('배정')">
+                <span class="opt-title">📋 배정팀</span>
+                <span class="opt-desc">고객본부 영업1팀</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-card locked" id="step2">
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div class="step-label">고객 구분</div>
+          </div>
+          <div class="step-body">
+            <div class="option-grid">
+              <button class="opt-btn" data-type="customer" onclick="selectCustomer('내국인')">
+                <span class="opt-title">🇰🇷 내국인</span>
+                <span class="opt-desc">F비자 포함</span>
+              </button>
+              <button class="opt-btn" data-type="customer" onclick="selectCustomer('외국인')">
+                <span class="opt-title">🌏 외국인</span>
+                <span class="opt-desc">F비자 제외</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-card locked" id="step3">
+          <div class="step-header">
+            <div class="step-num">3</div>
+            <div class="step-label">가입 구분</div>
+          </div>
+          <div class="step-body">
+            <div class="option-grid">
+              <button class="opt-btn" data-type="join" onclick="selectJoin('MNP')">
+                <span class="opt-title">🔄 번호이동</span>
+                <span class="opt-desc">MNP</span>
+              </button>
+              <button class="opt-btn" data-type="join" onclick="selectJoin('010신규')">
+                <span class="opt-title">✨ 010 신규</span>
+                <span class="opt-desc">신규 개통</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /top-steps -->
+
+      <!-- STEP 4: 요금제 카드 -->
+      <div class="plan-card locked" id="step4">
+        <div class="step-header">
+          <div class="step-num">4</div>
+          <div class="step-label">요금제 선택</div>
+        </div>
+        <div class="group-tabs" id="group-tabs"></div>
+        <div class="plan-list-wrap">
+          <div class="plan-grid" id="plan-grid"></div>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- 오른쪽: 수수료 패널 -->
+    <div>
+      <div class="result-panel">
+        <div class="result-sec-title">💰 수수료 상세</div>
+
+        <div id="result-empty" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div>1~4단계를 선택하면<br>수수료가 표시됩니다</div>
+        </div>
+
+        <div id="result-content" style="display:none">
+          <div class="result-rows" id="result-rows"></div>
+          <div class="result-divider"></div>
+          <div class="result-total-label">건당 예상 수수료 합계</div>
+          <div class="result-total" id="result-total">—</div>
+
+          <!-- 그레이드 -->
+          <div class="grade-section-inner" id="grade-section">
+            <div class="grade-divider"></div>
+            <div class="grade-sec-title">📈 이번달 실적 (그레이드)</div>
+
+            <div class="grade-slider-row">
+              <span class="grade-slider-label">개통 건수</span>
+              <input type="range" id="grade-slider" min="0" max="200" value="0" oninput="updateGrade(this.value)">
+              <span class="grade-count-badge" id="grade-val-txt">0건</span>
+            </div>
+
+            <div class="grade-bars" id="grade-bars"></div>
+
+            <div class="grade-result-box" id="grade-result-box" style="display:none">
+              <div class="gr-title">그레이드별 합계</div>
+              <table class="grade-result-table" id="grade-result-table"></table>
+            </div>
+            <div class="grade-note-txt" id="grade-note"></div>
+          </div>
+
+          <div class="disclaimer">
+            * VAT 포함 금액 기준<br>
+            * 해지환수: D+15~D+90 전액 / D+91~D+180 50%<br>
+            * TV결합수수료는 신규 결합 시만 적용
+          </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
+      </div>
+    </div>
+
+  </div><!-- /main-grid -->
+</div>
+
+<script>
+/* ══════════════════ 비밀번호 ══════════════════ */
+const CORRECT_HASH = "c8fd219f17e06dac4b1977f8a2f343daa1a095b61bccd1ab71db7c98e435ced4";
+async function sha256(m){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(m)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function checkPw(){
+  const v=document.getElementById('pw-input').value;
+  if(!v){document.getElementById('lock-error').textContent='비밀번호를 입력해주세요';return;}
+  const h=await sha256(v);
+  if(h===CORRECT_HASH){
+    document.getElementById('lock-overlay').classList.add('hidden');
+    sessionStorage.setItem('skylife_auth','1');
+    document.getElementById('pw-input').focus && setTimeout(()=>document.getElementById('pw-input').blur(),0);
+  } else {
+    document.getElementById('lock-error').textContent='비밀번호가 올바르지 않습니다';
+    const inp=document.getElementById('pw-input');
+    inp.classList.add('error'); inp.value='';
+    setTimeout(()=>inp.classList.remove('error'),500);
+  }
+}
+function togglePw(){const i=document.getElementById('pw-input'),b=document.getElementById('toggle-btn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}
+if(sessionStorage.getItem('skylife_auth')==='1') document.getElementById('lock-overlay').classList.add('hidden');
+window.addEventListener('DOMContentLoaded',()=>document.getElementById('pw-input')?.focus());
+
+/* ══════════════════ 데이터 ══════════════════ */
+const PLANS = {
+  "기본형": [
+    ["슬림 1.5GB/150분",5000,"RM",false],["슬림 3GB/300분",6900,"RM",false],
+    ["통화충분 1.5GB",6600,"RM",false],["통화충분 2.5GB",7700,"RM",false],
+    ["통화충분 4.5GB",8850,"RM",false],["통화충분 6.5GB",10900,"RM",false],
+    ["골드 500MB+",5900,"RM",false],["골드 2GB+",7400,"RM",false],
+    ["골드 4.0GB+",9900,"RM",false],["골드 8.0GB+",13900,"RM",false],
+    ["안심골드 2GB+",7400,"RM",false],["안심골드 4GB+",9900,"RM",false],
+    ["스쿨 2GB+",8900,"RM",false],["스쿨 4GB+",10900,"RM",false],["스쿨 8GB+",14900,"RM",false],
+    ["모두충분 1.5GB+",9900,"RM",false],["모두충분 2.5GB+",11800,"RM",false],
+    ["모두충분 4.5GB+",13200,"RM",false],["모두충분 6GB+",14900,"RM",false],
+    ["스마트데이터 10GB+",10800,"RS",false],["스마트데이터 20GB+",14100,"RS",false],
+    ["웨어러블 Watch",6600,"RS",false],
+  ],
+  "실속형": [
+    ["통화충분 10GB",13900,"RM",false],["통화충분 15GB",16900,"RM",false],["통화충분 20GB",20100,"RM",false],
+    ["SKY 데이터충분 2.2GB+",13900,"RS",true],["데이터충분 2.2GB+",11700,"RS",false],["데이터충분 5GB+",14300,"RS",false],
+  ],
+  "7GB+": [
+    ["SKY 모두충분 7GB+(밀리)",17900,"RS",true],["SKY 모두충분 7GB+(모아진)",17900,"RS",true],
+    ["모두충분 7GB+(밀리)",16200,"RS",false],["스쿨 7GB+(밀리)",16200,"RS",false],
+    ["모두충분 7GB+(지니뮤직)",19000,"RS",false],["모두충분 7GB+(Pay_5000)",18500,"RS",false],
+    ["모두충분 7GB+(올리브영)",18500,"RS",false],["모두충분 7GB+(다이소)",18500,"RS",false],["모두충분 7GB+(후후안심)",16200,"RS",false],
+  ],
+  "10GB+": [
+    ["SKY 모두충분 10GB+(밀리)",19900,"RS",true],["SKY 모두충분 10GB+(모아진)",19900,"RS",true],
+    ["모두충분 10GB+(밀리)",18900,"RS",false],["모두충분 10GB+(CU)",19400,"RS",false],
+    ["모두충분 10GB+(지니뮤직)",22400,"RS",false],["모두충분 10GB+(올리브영)",20300,"RS",false],["모두충분 10GB+(Pay_5000)",21400,"RS",false],
+  ],
+  "15GB+": [
+    ["SKY 모두충분 15GB+(밀리)",22400,"RS",true],["SKY 모두충분 15GB+(모아진)",22400,"RS",true],
+    ["SKY 데이터충분 15GB+(CU)",26500,"RS",true],["모두충분 15GB+(밀리)",20900,"RS",false],
+    ["데이터충분 15GB+/100분",25300,"RS",false],["데이터충분 15GB+/300분",27500,"RS",false],
+    ["모두충분 15GB+(지니뮤직)",24400,"RS",false],["모두충분 15GB+(웨이브)",29300,"RS",false],
+  ],
+  "11GB+": [
+    ["SKY 모두충분 11GB+(CU)",34000,"RS",true],["SKY 모두충분 11GB+(밀리)",34000,"RS",true],["SKY 모두충분 11GB+(모아진)",34000,"RS",true],
+    ["모두충분 11GB+(밀리)",33100,"RS",false],["모두충분 11GB+(CU)",33000,"RS",false],
+    ["모두충분 11GB+(지니뮤직)",35800,"RS",false],["모두충분 11GB+(왓챠)",35900,"RS",false],
+    ["모두충분 11GB+(배달의민족)",36300,"RS",false],["모두충분 11GB+(웨이브)",36600,"RS",false],["모두충분 11GB+(멜론뮤직)",36300,"RS",false],
+  ],
+  "100GB+": [
+    ["SKY 모두충분 100GB+(밀리)",39900,"RS",true],["SKY 모두충분 100GB+(CU)",39900,"RS",true],["SKY 모두충분 100GB+(모아진)",39900,"RS",true],
+    ["모두충분 100GB+(밀리)",38300,"RS",false],["모두충분 100GB+(웨이브)",41700,"RS",false],
+    ["모두충분 100GB+(Pay_5000)",41700,"RS",false],["모두충분 일5GB+(왓챠)",41100,"RS",false],
+  ],
+  "5G": [
+    ["5G 통화충분 20GB",25900,"RM",false],["5G 통화충분 30GB",29900,"RM",false],
+    ["5G 모두충분 14GB+",32000,"RS",false],["5G 모두충분 50GB+",37900,"RS",false],
+    ["5G 모두충분 70GB+",39100,"RS",false],["5G 모두충분 90GB+",40300,"RS",false],
+    ["5G 모두충분 110GB+",42900,"RS",false],["5G 모두충분 200GB+",49200,"RS",false],
+  ]
+};
+
+const BASE_FEE = {
+  "기본형": {MNP:10000,"010신규":5000}, "실속형": {MNP:15000,"010신규":5000},
+  "7GB+":  {MNP:20000,"010신규":10000}, "10GB+": {MNP:20000,"010신규":10000},
+  "15GB+": {MNP:20000,"010신규":10000}, "11GB+": {MNP:30000,"010신규":20000},
+  "100GB+":{MNP:30000,"010신규":25000}, "5G":    {MNP:30000,"010신규":25000},
+};
+const 배정FEE = {"기본형":10000,"실속형":15000,"7GB+":10000,"10GB+":10000,"15GB+":10000,"11GB+":10000,"100GB+":10000,"5G":10000};
+
+function getTVFee(g,p){ if(g==="기본형") return p>=10000?30000:(p>=7000?20000:0); return 30000; }
+
+const SKY_EXTRA = {
+  "SKY 데이터충분 2.2GB+":20000,
+  "SKY 모두충분 7GB+(밀리)":20000,"SKY 모두충분 7GB+(모아진)":20000,
+  "SKY 모두충분 10GB+(밀리)":20000,"SKY 모두충분 10GB+(모아진)":20000,
+  "SKY 데이터충분 15GB+(CU)":20000,"SKY 모두충분 15GB+(밀리)":20000,"SKY 모두충분 15GB+(모아진)":20000,
+  "SKY 모두충분 11GB+(CU)":20000,"SKY 모두충분 11GB+(밀리)":20000,"SKY 모두충분 11GB+(모아진)":20000,
+  "SKY 모두충분 100GB+(밀리)":20000,"SKY 모두충분 100GB+(CU)":20000,
+  "5G 통화충분 20GB":20000,"5G 통화충분 30GB":20000,
+  "골드 2GB+":20000,"골드 4.0GB+":20000,"골드 8.0GB+":20000,
+  "모두충분 2.5GB+":20000,"모두충분 10GB+(밀리)":20000,
+};
+const RETAIL_EXTRA_LIST = ["골드 2GB+","골드 4.0GB+","골드 8.0GB+","모두충분 2.5GB+","모두충분 10GB+(밀리)"];
+
+const GRADE_POLICY = {
+  "소매": [{min:130,label:"130건↑",fee:25000},{min:80,label:"80~129건",fee:20000},{min:50,label:"50~79건",fee:10000},{min:0,label:"50건 미만",fee:0}],
+  "CSC":  [{min:30,label:"30건↑",fee:20000},{min:20,label:"20~29건",fee:10000},{min:10,label:"10~19건",fee:5000},{min:0,label:"10건 미만",fee:0}],
+  "도매": [{min:1200,label:"1200건↑",fee:35000},{min:1000,label:"1000~",fee:30000},{min:800,label:"800~",fee:25000},{min:600,label:"600~",fee:20000},{min:0,label:"600 미만",fee:0}],
+  "배정": [{min:100,label:"목표달성",fee:5000},{min:0,label:"미달성",fee:0}],
+};
+
+/* ══════════════════ 상태 ══════════════════ */
+let S = { agency:null, customer:null, join:null, plan:null, planGroup:null, planPrice:0, planRS:null, gradeCount:0 };
+let activeGroup = null;
+
+/* ══════════════════ 핸들러 ══════════════════ */
+function selectAgency(v){
+  S.agency=v; S.customer=null; S.join=null; S.plan=null; S.planGroup=null; S.gradeCount=0;
+  markSelected('agency',v);
+  unlock('step2'); unlock('step3');
+  document.getElementById('step4').classList.add('locked');
+  clearSelected('customer'); clearSelected('join');
+  resetSlider();
+  buildGradeBars(); updateResult();
+}
+function selectCustomer(v){ S.customer=v; markSelected('customer',v); updateResult(); }
+function selectJoin(v){
+  S.join=v; S.plan=null; S.planGroup=null;
+  markSelected('join',v);
+  buildGroupTabs();
+  document.getElementById('step4').classList.remove('locked');
+  updateResult();
+}
+function selectGroup(g){
+  activeGroup=g;
+  document.querySelectorAll('.group-tab').forEach(t=>t.classList.toggle('active',t.dataset.g===g));
+  buildPlanGrid(g);
+}
+function selectPlan(name,group,price,rs){
+  S.plan=name; S.planGroup=group; S.planPrice=price; S.planRS=rs;
+  document.querySelectorAll('.plan-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelector(`[data-plan="${CSS.escape(name)}"]`)?.classList.add('selected');
+  updateResult();
+}
+function updateGrade(v){
+  S.gradeCount=parseInt(v);
+  const sl=document.getElementById('grade-slider');
+  sl.style.setProperty('--pct',(v/sl.max*100)+'%');
+  document.getElementById('grade-val-txt').textContent=v+'건';
+  updateResult();
+}
+
+/* ══════════════════ UI 빌더 ══════════════════ */
+function markSelected(type,val){
+  document.querySelectorAll(`[data-type="${type}"]`).forEach(b=>{
+    b.classList.toggle('selected', b.getAttribute('onclick')?.includes(`'${val}'`));
+  });
+}
+function clearSelected(type){ document.querySelectorAll(`[data-type="${type}"]`).forEach(b=>b.classList.remove('selected')); }
+function unlock(id){ const el=document.getElementById(id); el?.classList.remove('locked'); el?.classList.add('fade-in'); }
+
+function buildGroupTabs(){
+  const tabs=document.getElementById('group-tabs');
+  tabs.innerHTML='';
+  activeGroup=Object.keys(PLANS)[0];
+  Object.keys(PLANS).forEach(g=>{
+    const t=document.createElement('button');
+    t.className='group-tab'+(g===activeGroup?' active':'');
+    t.dataset.g=g; t.textContent=g;
+    t.onclick=()=>selectGroup(g);
+    tabs.appendChild(t);
+  });
+  buildPlanGrid(activeGroup);
+}
+
+function buildPlanGrid(group){
+  const grid=document.getElementById('plan-grid');
+  grid.innerHTML='';
+  (PLANS[group]||[]).forEach(([name,price,rs,sky])=>{
+    const b=document.createElement('button');
+    b.className='plan-btn'+(S.plan===name?' selected':'');
+    b.setAttribute('data-plan',name);
+    const skyBadge=sky?`<span class="plan-badge badge-sky">SKY</span>`:'';
+    const rsBadge=`<span class="plan-badge ${rs==='RS'?'badge-rs':'badge-rm'}">${rs}</span>`;
+    b.innerHTML=`<span class="plan-name">${name}${skyBadge}${rsBadge}</span><span class="plan-price">${price.toLocaleString()}원/월</span>`;
+    b.onclick=()=>selectPlan(name,group,price,rs);
+    grid.appendChild(b);
+  });
+}
+
+function buildGradeBars(){
+  const el=document.getElementById('grade-bars');
+  if(!S.agency||!GRADE_POLICY[S.agency]){el.innerHTML='';return;}
+  const policy=GRADE_POLICY[S.agency];
+  const maxMap={'도매':1500,'CSC':60,'배정':150,'소매':200};
+  const sl=document.getElementById('grade-slider');
+  sl.max=maxMap[S.agency]||200;
+  if(S.gradeCount>sl.max){S.gradeCount=parseInt(sl.max);sl.value=sl.max;}
+  sl.style.setProperty('--pct',(S.gradeCount/sl.max*100)+'%');
+  const cur=getCurrentGrade();
+  el.innerHTML='';
+  policy.forEach(g=>{
+    const d=document.createElement('div');
+    d.className='grade-bar'+(cur&&cur.min===g.min?' active':'');
+    d.innerHTML=`<span class="gb-label">${g.label}</span><span class="gb-fee">${g.fee>0?'+'+g.fee.toLocaleString()+'원':'–'}</span>`;
+    d.onclick=()=>{
+      const targetVal=g.min===0?0:g.min;
+      S.gradeCount=targetVal;
+      sl.value=targetVal;
+      sl.style.setProperty('--pct',(targetVal/sl.max*100)+'%');
+      document.getElementById('grade-val-txt').textContent=targetVal+'건';
+      updateResult();
+    };
+    el.appendChild(d);
+  });
+  const noteMap={'소매':'RS+RM 전체 실적 기준 · 당월해지 제외','CSC':'RS+RM 기준 · 당월해지 제외','도매':'RS 요금제만 산정 (RM 제외)','배정':'목표달성 기준 (추후 공지)'};
+  document.getElementById('grade-note').textContent='ℹ️ '+(noteMap[S.agency]||'');
+}
+
+function getCurrentGrade(){
+  if(!S.agency||!GRADE_POLICY[S.agency]) return null;
+  return GRADE_POLICY[S.agency].find(g=>S.gradeCount>=g.min)||null;
+}
+
+function getSKYExtra(name){ return Object.keys(SKY_EXTRA).find(k=>name.startsWith(k))?SKY_EXTRA[Object.keys(SKY_EXTRA).find(k=>name.startsWith(k))]:0; }
+
+function calcTotal(){
+  if(!S.plan||!S.join||!S.agency) return 0;
+  let t=0;
+  let base=S.agency==='배정'?(배정FEE[S.planGroup]||0):((BASE_FEE[S.planGroup]||{})[S.join]||0);
+  t+=base;
+  t+=getTVFee(S.planGroup,S.planPrice);
+  t+=getSKYExtra(S.plan);
+  if(S.join==='MNP'&&S.planRS==='RS') t+=15000;
+  if(S.agency==='소매'&&RETAIL_EXTRA_LIST.includes(S.plan)) t+=20000;
+  return t;
+}
+
+function updateResult(){
+  const empty=document.getElementById('result-empty');
+  const content=document.getElementById('result-content');
+  const hrAmount=document.getElementById('hr-amount');
+  const hrGrade=document.getElementById('hr-grade');
+
+  if(!S.plan||!S.join||!S.agency){
+    empty.style.display='block'; content.style.display='none';
+    hrAmount.className='hr-amount empty'; hrAmount.textContent='조건 선택 중…';
+    hrGrade.textContent=''; return;
+  }
+  empty.style.display='none'; content.style.display='block';
+
+  const rows=[];
+  let total=0;
+  let base=S.agency==='배정'?(배정FEE[S.planGroup]||0):((BASE_FEE[S.planGroup]||{})[S.join]||0);
+  rows.push({label:`기본 모집수수료 (${S.join})`,val:base,hl:true});
+  total+=base;
+
+  const tv=getTVFee(S.planGroup,S.planPrice);
+  rows.push({label:'TV결합 수수료',val:tv,note:'신규 결합 시만 적용'});
+  total+=tv;
+
+  const extra=getSKYExtra(S.plan);
+  if(extra>0){rows.push({label:'SKY 현장전용 추가',val:extra});total+=extra;}
+
+  if(S.join==='MNP'&&S.planRS==='RS'){rows.push({label:'V코드(신분증스캐너)',val:15000,note:'RS 번호이동 시'});total+=15000;}
+
+  if(S.agency==='소매'&&RETAIL_EXTRA_LIST.includes(S.plan)){rows.push({label:'소매 주력 요금제 추가',val:20000});total+=20000;}
+
+  // 그레이드 수수료 합계에 포함
+  const cur=getCurrentGrade();
+  const gradeFee = cur ? cur.fee : 0;
+  if(gradeFee>0){
+    rows.push({label:`그레이드 추가 (${cur.label})`, val:gradeFee, grade:true});
+    total+=gradeFee;
+  }
+
+  document.getElementById('result-rows').innerHTML=rows.map(r=>`
+    <div class="result-row ${r.hl?'hl':''} ${r.grade?'grade-row':''}">
+      <span class="r-label">${r.label}${r.note?`<br><small style="font-size:9px;opacity:0.55">${r.note}</small>`:''}</span>
+      <span class="r-val ${r.val===0?'zero':''}${r.grade?' grade-val':''}">${r.val>0?'+'+r.val.toLocaleString()+'원':'—'}</span>
+    </div>`).join('');
+
+  document.getElementById('result-total').innerHTML=`${total.toLocaleString()}<span>원</span>`;
+
+  // 헤더 미니 결과
+  hrAmount.className='hr-amount';
+  hrAmount.innerHTML=`${total.toLocaleString()}<span>원</span>`;
+
+  buildGradeResult(total - gradeFee);
+  buildGradeBars();
+
+  // 헤더 그레이드 표시
+  hrGrade.textContent = gradeFee>0 ? `그레이드 +${gradeFee.toLocaleString()}원 포함` : '';
+}
+
+function buildGradeResult(baseTot){
+  const box=document.getElementById('grade-result-box');
+  const table=document.getElementById('grade-result-table');
+  if(!S.agency||!GRADE_POLICY[S.agency]){box.style.display='none';return;}
+  box.style.display='block';
+  const policy=GRADE_POLICY[S.agency];
+  const cur=getCurrentGrade();
+  table.innerHTML=policy.map(g=>{
+    const isCur=cur&&cur.min===g.min;
+    return `<tr style="${isCur?'opacity:1':'opacity:0.45'}">
+      <td>${isCur?'▶ ':''}<b>${g.label}</b></td>
+      <td>+${g.fee.toLocaleString()}원</td>
+      <td>= ${(baseTot+g.fee).toLocaleString()}원</td>
+    </tr>`;
+  }).join('');
+}
+
+function resetSlider(){
+  S.gradeCount=0;
+  const sl=document.getElementById('grade-slider');
+  sl.value=0; sl.style.setProperty('--pct','0%');
+  document.getElementById('grade-val-txt').textContent='0건';
+}
+
+function resetAll(){
+  S={agency:null,customer:null,join:null,plan:null,planGroup:null,planPrice:0,planRS:null,gradeCount:0};
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  ['step2','step3'].forEach(id=>document.getElementById(id).classList.add('locked'));
+  document.getElementById('step4').classList.add('locked');
+  document.getElementById('group-tabs').innerHTML='';
+  document.getElementById('plan-grid').innerHTML='';
+  document.getElementById('grade-bars').innerHTML='';
+  document.getElementById('grade-note').textContent='';
+  document.getElementById('grade-result-box').style.display='none';
+  resetSlider();
+  document.getElementById('result-empty').style.display='block';
+  document.getElementById('result-content').style.display='none';
+  const h=document.getElementById('hr-amount');
+  h.className='hr-amount empty'; h.textContent='조건 선택 중…';
+  document.getElementById('hr-grade').textContent='';
+}
+
+document.getElementById('grade-slider').style.setProperty('--pct','0%');
+</script>
+</body>
+</html>
