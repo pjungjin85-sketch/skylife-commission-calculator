@@ -313,6 +313,28 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
 .grade-result-table td:last-child { text-align:right; font-weight:700; color:#ffb300; font-family:'DM Mono',monospace; }
 .grade-note-txt { font-size:10px; color:rgba(255,255,255,0.35); margin-top:8px; line-height:1.5; }
 
+/* TV결합 토글 */
+.tv-toggle-row {
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:10px 14px; margin-bottom:14px;
+}
+.tv-toggle-label { font-size:12px; color:rgba(255,255,255,0.7); flex:1; }
+.tv-toggle-status { font-size:11px; font-weight:700; color:rgba(255,255,255,0.4); min-width:36px; text-align:right; transition:color 0.2s; }
+.tv-toggle-status.on { color:#4fc3f7; }
+.tv-switch { position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; }
+.tv-switch input { opacity:0; width:0; height:0; }
+.tv-slider {
+  position:absolute; cursor:pointer; inset:0;
+  background:rgba(255,255,255,0.15); border-radius:22px; transition:.25s;
+}
+.tv-slider:before {
+  content:""; position:absolute; width:16px; height:16px;
+  left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.25s;
+}
+.tv-switch input:checked + .tv-slider { background:#4fc3f7; }
+.tv-switch input:checked + .tv-slider:before { transform:translateX(18px); }
+
 .disclaimer { margin-top:14px; padding:8px 10px; background:rgba(255,255,255,0.05); border-radius:7px; font-size:9px; color:rgba(255,255,255,0.35); line-height:1.7; }
 
 .reset-btn {
@@ -477,6 +499,15 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
         </div>
 
         <div id="result-content" style="display:none">
+          <!-- TV결합 토글 -->
+          <div class="tv-toggle-row">
+            <span class="tv-toggle-label">📺 TV결합</span>
+            <label class="tv-switch">
+              <input type="checkbox" id="tv-checkbox" onchange="toggleTV(this.checked)">
+              <span class="tv-slider"></span>
+            </label>
+            <span class="tv-toggle-status" id="tv-toggle-status">미결합</span>
+          </div>
           <div class="result-rows" id="result-rows"></div>
           <div class="result-divider"></div>
           <div class="result-total-label">건당 예상 수수료 합계</div>
@@ -505,7 +536,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
           <div class="disclaimer">
             * VAT 포함 금액 기준<br>
             * 해지환수: D+15~D+90 전액 / D+91~D+180 50%<br>
-            * TV결합수수료는 신규 결합 시만 적용
           </div>
         </div>
 
@@ -602,7 +632,7 @@ const BASE_FEE = {
 };
 const 배정FEE = {"기본형":10000,"실속형":15000,"7GB+":10000,"10GB+":10000,"15GB+":10000,"11GB+":10000,"100GB+":10000,"5G":10000};
 
-function getTVFee(g,p){ if(g==="기본형") return p>=10000?30000:(p>=7000?20000:0); return 30000; }
+function getTVFee(g,p){ if(g==="기본형") return p>=10000?30000:20000; return 30000; }
 
 const SKY_EXTRA = {
   "SKY 데이터충분 2.2GB+":20000,
@@ -612,8 +642,6 @@ const SKY_EXTRA = {
   "SKY 모두충분 11GB+(CU)":20000,"SKY 모두충분 11GB+(밀리)":20000,"SKY 모두충분 11GB+(모아진)":20000,
   "SKY 모두충분 100GB+(밀리)":20000,"SKY 모두충분 100GB+(CU)":20000,
   "5G 통화충분 20GB":20000,"5G 통화충분 30GB":20000,
-  "골드 2GB+":20000,"골드 4.0GB+":20000,"골드 8.0GB+":20000,
-  "모두충분 2.5GB+":20000,"모두충분 10GB+(밀리)":20000,
 };
 const RETAIL_EXTRA_LIST = ["골드 2GB+","골드 4.0GB+","골드 8.0GB+","모두충분 2.5GB+","모두충분 10GB+(밀리)"];
 
@@ -625,10 +653,17 @@ const GRADE_POLICY = {
 };
 
 /* ══════════════════ 상태 ══════════════════ */
-let S = { agency:null, customer:null, join:null, plan:null, planGroup:null, planPrice:0, planRS:null, gradeCount:0 };
+let S = { agency:null, customer:null, join:null, plan:null, planGroup:null, planPrice:0, planRS:null, gradeCount:0, tvCombined:false };
 let activeGroup = null;
 
 /* ══════════════════ 핸들러 ══════════════════ */
+function toggleTV(checked){
+  S.tvCombined = checked;
+  const status = document.getElementById('tv-toggle-status');
+  status.textContent = checked ? 'TV결합' : '미결합';
+  status.className = 'tv-toggle-status' + (checked ? ' on' : '');
+  updateResult();
+}
 function selectAgency(v){
   S.agency=v; S.customer=null; S.join=null; S.plan=null; S.planGroup=null; S.gradeCount=0;
   markSelected('agency',v);
@@ -744,7 +779,7 @@ function calcTotal(){
   let t=0;
   let base=S.agency==='배정'?(배정FEE[S.planGroup]||0):((BASE_FEE[S.planGroup]||{})[S.join]||0);
   t+=base;
-  t+=getTVFee(S.planGroup,S.planPrice);
+  if(S.tvCombined) t+=getTVFee(S.planGroup,S.planPrice);
   t+=getSKYExtra(S.plan);
   if(S.join==='MNP'&&S.planRS==='RS') t+=15000;
   if(S.agency==='소매'&&RETAIL_EXTRA_LIST.includes(S.plan)) t+=20000;
@@ -770,8 +805,8 @@ function updateResult(){
   rows.push({label:`기본 모집수수료 (${S.join})`,val:base,hl:true});
   total+=base;
 
-  const tv=getTVFee(S.planGroup,S.planPrice);
-  rows.push({label:'TV결합 수수료',val:tv,note:'신규 결합 시만 적용'});
+  const tv=S.tvCombined ? getTVFee(S.planGroup,S.planPrice) : 0;
+  if(S.tvCombined) rows.push({label:'TV결합 수수료',val:tv});
   total+=tv;
 
   const extra=getSKYExtra(S.plan);
