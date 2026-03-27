@@ -357,6 +357,63 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
   to   { opacity:1; transform:translateY(0); }
 }
 .fade-in { animation:fadeInUp 0.25s ease forwards; }
+
+/* ── 모바일 하단 고정 수수료 바 ── */
+#mobile-fee-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  background: #fff;
+  border-top: 2px solid var(--accent);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+  padding: 10px 16px 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mfb-left { display: flex; flex-direction: column; }
+.mfb-label { font-size: 11px; color: var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom: 2px; }
+.mfb-amount { font-size: 24px; font-weight: 900; color: var(--accent); font-family: 'DM Mono', monospace; letter-spacing: -1px; line-height: 1; }
+.mfb-amount span { font-size: 13px; font-weight: 600; }
+.mfb-amount.empty { font-size: 13px; color: var(--text-muted); font-family: 'Noto Sans KR', sans-serif; font-weight: 400; }
+.mfb-grade { font-size: 10px; color: var(--gold); font-weight: 600; min-height: 14px; margin-top: 2px; }
+
+/* ── 반응형 ── */
+/* 태블릿: 3단계 → 2열 */
+@media(max-width:960px) {
+  .top-steps { grid-template-columns: repeat(2, 1fr); }
+  .top-steps .step-card:last-child { grid-column: span 2; }
+}
+@media(max-width:700px) {
+  .top-steps { grid-template-columns: 1fr; }
+  .top-steps .step-card:last-child { grid-column: span 1; }
+}
+
+/* 모바일 */
+@media(max-width:640px) {
+  /* 헤더 */
+  .header { padding: 10px 14px; gap: 8px; }
+  .header-right { display: none; }
+  .header h1 { font-size: 15px; }
+  .header-badge { font-size: 9px; }
+
+  /* 모바일 하단 바 노출 */
+  #mobile-fee-bar { display: flex; }
+
+  /* 컨테이너 */
+  .container { padding: 12px 10px 80px; }
+
+  /* 옵션 버튼 */
+  .opt-btn { min-width: 80px; padding: 8px 10px; }
+  .opt-title { font-size: 12px; }
+
+  /* 요금제 그리드 */
+  .plan-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  /* 결과 패널 (모바일 1열 하단 위치) — sticky 해제 */
+  .result-panel { position: static; }
+}
 </style>
 </head>
 <body>
@@ -396,6 +453,15 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
       <div class="hr-amount empty" id="hr-amount">조건 선택 중…</div>
       <div class="hr-grade" id="hr-grade"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══ 모바일 하단 수수료 바 ══ -->
+<div id="mobile-fee-bar">
+  <div class="mfb-left">
+    <div class="mfb-label">건당 예상 수수료</div>
+    <div class="mfb-amount empty" id="mfb-amount">조건 선택 중…</div>
+    <div class="mfb-grade" id="mfb-grade"></div>
   </div>
 </div>
 
@@ -797,10 +863,15 @@ function updateResult(){
   const hrAmount=document.getElementById('hr-amount');
   const hrGrade=document.getElementById('hr-grade');
 
+  const mfbAmount=document.getElementById('mfb-amount');
+  const mfbGrade=document.getElementById('mfb-grade');
+
   if(!S.plan||!S.join||!S.agency){
     empty.style.display='block'; content.style.display='none';
     hrAmount.className='hr-amount empty'; hrAmount.textContent='조건 선택 중…';
-    hrGrade.textContent=''; return;
+    hrGrade.textContent='';
+    mfbAmount.className='mfb-amount empty'; mfbAmount.textContent='조건 선택 중…';
+    mfbGrade.textContent=''; return;
   }
   empty.style.display='none'; content.style.display='block';
 
@@ -846,6 +917,11 @@ function updateResult(){
 
   // 헤더 그레이드 표시
   hrGrade.textContent = gradeFee>0 ? `그레이드 +${gradeFee.toLocaleString()}원 포함` : '';
+
+  // 모바일 하단 바 연동
+  mfbAmount.className='mfb-amount';
+  mfbAmount.innerHTML=`${total.toLocaleString()}<span>원</span>`;
+  mfbGrade.textContent = gradeFee>0 ? `그레이드 +${gradeFee.toLocaleString()}원 포함` : '';
 }
 
 function buildGradeResult(baseTot){
@@ -888,6 +964,9 @@ function resetAll(){
   const h=document.getElementById('hr-amount');
   h.className='hr-amount empty'; h.textContent='조건 선택 중…';
   document.getElementById('hr-grade').textContent='';
+  const mfb=document.getElementById('mfb-amount');
+  mfb.className='mfb-amount empty'; mfb.textContent='조건 선택 중…';
+  document.getElementById('mfb-grade').textContent='';
 }
 
 document.getElementById('grade-slider').style.setProperty('--pct','0%');
