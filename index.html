@@ -88,6 +88,9 @@ body {
   box-shadow: var(--shadow);
 }
 .header-left { position:relative; }
+.logo-text{font-size:18px;font-weight:900;color:var(--black);letter-spacing:-.02em;white-space:nowrap;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.logo-text span{color:var(--red);}
+.logo-mobile-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:.04em;white-space:nowrap;}
 .header-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(230,0,18,.08); border:1px solid rgba(230,0,18,.25); color:var(--accent); font-size:10px; font-weight:700; letter-spacing:.06em; padding:3px 10px; border-radius:3px; margin-bottom:6px; text-transform:uppercase; }
 .header h1 { color:var(--text); font-size:clamp(15px,3vw,20px); font-weight:900; letter-spacing:-0.5px; }
 .header h1 span { color:var(--accent); }
@@ -445,8 +448,9 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
       <a href="https://pjungjin85-sketch.github.io/skylife-guide/mobile_sales_guide.html" style="display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;padding:4px 10px;border-radius:4px;border:1px solid rgba(230,0,18,.25);background:rgba(230,0,18,.05);transition:all .2s;">← 개통 가이드</a>
     </div>
+    <div class="logo-text">kt <span>skylife</span><span class="logo-mobile-badge">MOBILE</span></div>
     <div class="header-badge">2026 · 03월 1차 영업정책</div>
-    <h1>SKY Life 모바일 <span>수수료 계산기</span></h1>
+    <h1>모바일 <span>수수료 계산기</span></h1>
   </div>
   <div class="header-right">
     <div class="header-result">
