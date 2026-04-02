@@ -521,7 +521,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
     <div class="notice-badge">📢 공지</div>
     <div class="notice-title">중요 안내 사항</div>
     <div class="notice-body">중요 안내 사항 입력</div>
-    <div class="notice-close-hint">화면 아무 곳이나 클릭하면 닫힙니다</div>
+    <div class="notice-close-hint">팝업을 클릭하면 닫힙니다</div>
   </div>
 </div>
 
@@ -738,7 +738,7 @@ function showNoticeIfNeeded(){
   }
 }
 function closeNotice(e){
-  if(e.target===document.getElementById('notice-overlay')||e.target.closest('.notice-box')===null)
+  if(e.target.closest('.notice-box'))
     document.getElementById('notice-overlay').classList.add('hidden');
 }
 
@@ -826,8 +826,8 @@ const PLANS = {
   "15GB+": [
     ["SKY 모두 충분 15GB+(밀리의서재)",22400,"RS",true,"+10GB (LTE)","+10GB (LTE)","+10GB (24개월)",true],
     ["SKY 모두 충분 15GB+(모아진)",22400,"RS",true,"+10GB (LTE)","+10GB (LTE)","+10GB (24개월)",true],
-    ["SKY 데이터 충분 15GB+(CU)",26500,"RS",true,"+10GB (LTE)","+10GB (LTE)",null,true],
-    ["SKY 데이터 충분 15GB+(모아진)",26500,"RS",true,"+10GB (LTE)","+10GB (LTE)",null,true],
+    ["SKY 데이터 충분 15GB+/100분(CU)",26500,"RS",true,"+10GB (LTE)","+10GB (LTE)",null,true],
+    ["SKY 데이터 충분 15GB+/100분(모아진)",26500,"RS",true,"+10GB (LTE)","+10GB (LTE)",null,true],
     ["모두 충분 15GB+(밀리의서재)",21500,"RS",false,"+10GB (LTE)","+10GB (LTE)","+10GB (24개월)",true],
     ["모두 충분 15GB+(모아진)",21400,"RS",false,"+10GB (LTE)","+10GB (LTE)","+10GB (24개월)",true],
     ["모두 충분 15GB+(후후안심)",20900,"RS",false,"+10GB (LTE)","+10GB (LTE)","+10GB (24개월)",true],
@@ -908,7 +908,7 @@ const SKY_EXTRA = {
   "SKY 데이터 충분 2.2GB+":20000,
   "SKY 모두 충분 7GB+(밀리의서재)":20000,"SKY 모두 충분 7GB+(모아진)":20000,
   "SKY 모두 충분 10GB+(밀리의서재)":20000,"SKY 모두 충분 10GB+(모아진)":20000,
-  "SKY 데이터 충분 15GB+(CU)":20000,"SKY 데이터 충분 15GB+(모아진)":20000,
+  "SKY 데이터 충분 15GB+/100분(CU)":20000,"SKY 데이터 충분 15GB+/100분(모아진)":20000,
   "SKY 모두 충분 15GB+(밀리의서재)":20000,"SKY 모두 충분 15GB+(모아진)":20000,
   "SKY 모두 충분 11GB+(밀리의서재)":20000,"SKY 모두 충분 11GB+(CU)":20000,"SKY 모두 충분 11GB+(모아진)":20000,
   "SKY 모두 충분 100GB+(밀리의서재)":20000,"SKY 모두 충분 100GB+(모아진)":20000,"SKY 모두 충분 100GB+(CU)":20000,
@@ -1081,25 +1081,18 @@ function updateResult(){
 
   // 혜택 정보 표시
   const bInfo = document.getElementById('benefit-info');
-  if(S.planNungu||S.planUIT||S.planPromo||S.planVIT!==null){
-    bInfo.style.display='block';
-    const setBI=(id,val,isVit)=>{
-      const el=document.getElementById(id);
-      if(isVit){
-        el.className='benefit-val '+(val?'vit-o':'vit-x');
-        el.textContent=val?'가능':'불가';
-      } else {
-        el.className='benefit-val'+(val?'':' none');
-        el.textContent=val||'—';
-      }
-    };
-    setBI('bi-nungu',S.planNungu,false);
-    setBI('bi-uit',S.planUIT,false);
-    setBI('bi-promo',S.planPromo,false);
-    setBI('bi-vit',S.planVIT,true);
-  } else {
-    bInfo.style.display='none';
-  }
+  bInfo.style.display='block';
+  const setVal=(id,val)=>{
+    const el=document.getElementById(id);
+    el.className='benefit-val'+(val?'':' none');
+    el.textContent=val||'—';
+  };
+  setVal('bi-nungu',S.planNungu);
+  setVal('bi-uit',S.planUIT);
+  setVal('bi-promo',S.planPromo);
+  const vitEl=document.getElementById('bi-vit');
+  vitEl.className='benefit-val '+(S.planVIT?'vit-o':'vit-x');
+  vitEl.textContent=S.planVIT?'가능':'불가';
 
   const rows=[];
   let total=0;
