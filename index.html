@@ -148,7 +148,7 @@ body {
   border: 1px solid rgba(230,0,18,.2);
   border-radius: 8px;
   padding: 12px 18px;
-  min-width: 190px;
+  min-width: 300px;
   text-align: center;
 }
 .hr-label { font-size:10px; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
@@ -417,6 +417,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
 .benefit-val.vit-x { color: #BBBBBB; }
 
 .disclaimer { margin-top:14px; padding:8px 10px; background:#F7F7F7; border:1px solid var(--border); border-radius:6px; font-size:9px; color:var(--text-muted); opacity:.8; line-height:1.7; }
+.fee-notice { font-size:9px; color:var(--text-muted); opacity:.7; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .reset-btn {
   display:block; width:100%; padding:10px;
@@ -539,6 +540,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
       <div class="hr-label">건당 예상 수수료</div>
       <div class="hr-amount empty" id="hr-amount">조건 선택 중…</div>
       <div class="hr-grade" id="hr-grade"></div>
+      <div class="fee-notice">*해당 금액은 참고용으로 정확한 수수료는 정책서를 참고해주세요</div>
     </div>
   </div>
 </div>
@@ -670,6 +672,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
           <div class="result-divider"></div>
           <div class="result-total-label">건당 예상 수수료 합계</div>
           <div class="result-total" id="result-total">—</div>
+          <div class="fee-notice">*해당 금액은 참고용으로 정확한 수수료는 정책서를 참고해주세요</div>
 
           <!-- 혜택 정보 -->
           <div id="benefit-info" class="benefit-box" style="display:none">
