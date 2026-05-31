@@ -514,7 +514,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
     </div>
     <button class="lock-btn" onclick="checkPw()">확인</button>
     <div class="lock-error" id="lock-error"></div>
-    <div class="lock-footer">2026 · 04월 영업정책 · 내부용<br>Created by 박정진</div>
+    <div class="lock-footer" id="lockFooterLabel">로딩 중...<br>Created by 박정진</div>
   </div>
 </div>
 
@@ -522,8 +522,8 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
 <div id="notice-overlay" class="hidden" onclick="closeNotice()">
   <div class="notice-box" onclick="event.stopPropagation()">
     <div class="notice-badge">📢 공지</div>
-    <div class="notice-title">2026년 04월 정책 안내</div>
-    <div class="notice-body">2026년 4월 정책으로 업데이트 되었습니다.</div>
+    <div class="notice-title" id="noticeTitleLabel">정책 안내</div>
+    <div class="notice-body" id="noticeBodyLabel">로딩 중...</div>
     <div class="notice-close-hint">아무 곳이나 클릭하면 닫힙니다</div>
   </div>
 </div>
@@ -532,7 +532,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
 <div class="header">
   <div class="header-left">
     <div class="logo-text">kt <span>skylife</span><span class="logo-mobile-badge">MOBILE</span></div>
-    <div class="header-badge">2026 · 04월 영업정책</div>
+    <div class="header-badge" id="headerBadgeLabel">영업정책</div>
     <h1>모바일 <span>수수료 계산기</span></h1>
   </div>
   <div class="header-right">
@@ -741,14 +741,16 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
 const CORRECT_HASH = "e20ef9b594a57e2eef2871a1e6e5d53cb8cc74d06afe06b7124b1edc219e5ac0";
 async function sha256(m){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(m)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join(''); }
 function showNoticeIfNeeded(){
-  const today=new Date().toISOString().slice(0,10);
-  if(localStorage.getItem('skylife_notice_date')!==today){
+  if(!ACTIVE_POLICY_KEY) return;
+  if(!localStorage.getItem(`skylife_notice_${ACTIVE_POLICY_KEY}`)){
     document.getElementById('notice-overlay').classList.remove('hidden');
-    localStorage.setItem('skylife_notice_date',today);
   }
 }
 function closeNotice(){
   document.getElementById('notice-overlay').classList.add('hidden');
+  if(ACTIVE_POLICY_KEY){
+    localStorage.setItem(`skylife_notice_${ACTIVE_POLICY_KEY}`, '1');
+  }
 }
 
 async function checkPw(){
@@ -770,23 +772,49 @@ async function checkPw(){
 function togglePw(){const i=document.getElementById('pw-input'),b=document.getElementById('toggle-btn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}
 if(sessionStorage.getItem('skylife_auth')==='1'){
   document.getElementById('lock-overlay').classList.add('hidden');
-  showNoticeIfNeeded();
+  // showNoticeIfNeeded는 fetch 완료 후 DOMContentLoaded에서 호출
 }
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('pw-input')?.focus();
   fetch('data/commission.json?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      PLANS = data.PLANS;
-      BASE_FEE = data.BASE_FEE;
-      배정FEE = data['배정FEE'];
-      SKY_EXTRA = data.SKY_EXTRA;
-      RETAIL_EXTRA_LIST = data.RETAIL_EXTRA_LIST;
-      GRADE_POLICY = data.GRADE_POLICY;
+      // 오늘 날짜 이하의 키 중 가장 최근 정책 선택
+      const today = new Date().toISOString().slice(0, 10);
+      const keys = Object.keys(data).sort();
+      ACTIVE_POLICY_KEY = keys.filter(k => k <= today).pop() ?? keys[0];
+
+      const policy = data[ACTIVE_POLICY_KEY];
+      PLANS = policy.PLANS;
+      BASE_FEE = policy.BASE_FEE;
+      배정FEE = policy['배정FEE'];
+      SKY_EXTRA = policy.SKY_EXTRA;
+      RETAIL_EXTRA_LIST = policy.RETAIL_EXTRA_LIST;
+      GRADE_POLICY = policy.GRADE_POLICY;
+
+      // 정책 라벨 생성: "2026-05-15" → "2026 · 05월"
+      const [year, month] = ACTIVE_POLICY_KEY.split('-');
+      POLICY_LABEL = `${year} · ${month}월`;
+      const footer = document.getElementById('lockFooterLabel');
+      footer.textContent = '';
+      footer.appendChild(document.createTextNode(`${POLICY_LABEL} 영업정책 · 내부용`));
+      footer.appendChild(document.createElement('br'));
+      footer.appendChild(document.createTextNode('Created by 박정진'));
+      document.getElementById('noticeTitleLabel').textContent = `${year}년 ${parseInt(month)}월 정책 안내`;
+      document.getElementById('noticeBodyLabel').textContent = `${year}년 ${parseInt(month)}월 정책으로 업데이트 되었습니다.`;
+      document.getElementById('headerBadgeLabel').textContent = `${POLICY_LABEL} 영업정책`;
+
+      // 이미 로그인된 상태라면 공지 표시
+      if (sessionStorage.getItem('skylife_auth') === '1') {
+        showNoticeIfNeeded();
+      }
     });
 });
 
 /* ══════════════════ 데이터 ══════════════════ */
+let ACTIVE_POLICY_KEY = '';
+let POLICY_LABEL = '';
+
 let PLANS = {};
 
 let BASE_FEE = {};
