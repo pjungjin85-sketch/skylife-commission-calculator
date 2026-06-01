@@ -584,10 +584,7 @@ footer{text-align:center;padding:24px 20px;font-size:11px;color:#999999;border-t
                 <span class="opt-title">🔄 도매</span>
                 <span class="opt-desc">전문 도매 채널</span>
               </button>
-              <button class="opt-btn" data-type="agency" onclick="selectAgency('배정')">
-                <span class="opt-title">📋 배정팀</span>
-                <span class="opt-desc">고객본부 영업1팀</span>
-              </button>
+
             </div>
           </div>
         </div>
@@ -787,7 +784,6 @@ window.addEventListener('DOMContentLoaded', () => {
       const policy = data[ACTIVE_POLICY_KEY];
       PLANS = policy.PLANS;
       BASE_FEE = policy.BASE_FEE;
-      배정FEE = policy['배정FEE'];
       SKY_EXTRA = policy.SKY_EXTRA;
       RETAIL_EXTRA_LIST = policy.RETAIL_EXTRA_LIST;
       GRADE_POLICY = policy.GRADE_POLICY;
@@ -818,7 +814,6 @@ let POLICY_LABEL = '';
 let PLANS = {};
 
 let BASE_FEE = {};
-let 배정FEE = {};
 
 function getTVFee(g,p){ if(g==="기본형") return p>=10000?30000:20000; return 30000; }
 
@@ -919,7 +914,7 @@ function buildGradeBars(){
   const el=document.getElementById('grade-bars');
   if(!S.agency||!GRADE_POLICY[S.agency]){el.innerHTML='';return;}
   const policy=GRADE_POLICY[S.agency];
-  const maxMap={'도매':1500,'CSC':60,'배정':150,'소매':200};
+  const maxMap={'도매':1500,'CSC':60,'소매':200};
   const sl=document.getElementById('grade-slider');
   sl.max=maxMap[S.agency]||200;
   if(S.gradeCount>sl.max){S.gradeCount=parseInt(sl.max);sl.value=sl.max;}
@@ -940,7 +935,7 @@ function buildGradeBars(){
     };
     el.appendChild(d);
   });
-  const noteMap={'소매':'RS+RM 전체 실적 기준 · 당월해지 제외','CSC':'RS+RM 기준 · 당월해지 제외','도매':'RS 요금제만 산정 (RM 제외)','배정':'목표달성 기준 (추후 공지)'};
+  const noteMap={'소매':'RS+RM 전체 실적 기준 · 당월해지 제외','CSC':'RS+RM 기준 · 당월해지 제외','도매':'RS 요금제만 산정 (RM 제외)'};
   document.getElementById('grade-note').textContent='ℹ️ '+(noteMap[S.agency]||'');
 }
 
@@ -954,7 +949,7 @@ function getSKYExtra(name){ return Object.keys(SKY_EXTRA).find(k=>name.startsWit
 function calcTotal(){
   if(!S.plan||!S.join||!S.agency) return 0;
   let t=0;
-  let base=S.agency==='배정'?(배정FEE[S.planGroup]||0):((BASE_FEE[S.planGroup]||{})[S.join]||0);
+  let base=(BASE_FEE[S.planGroup]||{})[S.join]||0;
   t+=base;
   if(S.tvCombined) t+=getTVFee(S.planGroup,S.planPrice);
   t+=getSKYExtra(S.plan);
@@ -1000,7 +995,7 @@ function updateResult(){
 
   const rows=[];
   let total=0;
-  let base=S.agency==='배정'?(배정FEE[S.planGroup]||0):((BASE_FEE[S.planGroup]||{})[S.join]||0);
+  let base=(BASE_FEE[S.planGroup]||{})[S.join]||0;
   rows.push({label:`기본 모집수수료 (${S.join})`,val:base,hl:true});
   total+=base;
 
