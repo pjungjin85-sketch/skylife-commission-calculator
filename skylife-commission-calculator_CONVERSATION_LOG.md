@@ -2,6 +2,54 @@
 
 ---
 
+## 세션 8 — 2026-06-01 — 6월 정책 데이터 추가
+
+### 작업 내용
+
+**소스 파일**: 3개 PDF (2026년 06월 무선 영업정책)
+- `00_상품공통_2026년 06월 1차 무선 영업정책(공통)_20260529_f1.0.pdf`
+- `00_상품공통_도매_2026년 06월 1차 무선 영업정책_20260529_f1.0.pdf`
+- `01_배정_영업팀_2026년 06월 무선 영업정책_20260529_f1.0.pdf`
+
+**1. commission.json에 `2026-06-01` 키 추가**
+- 4월 데이터(`2026-04-01`) 기반으로 변경사항만 반영
+
+**2. PLANS 변경**
+
+| 그룹 | 변경 | 요금제명 | 금액 |
+|------|------|---------|------|
+| 7GB+ | 신규 추가 | 모두 충분 7GB+(CU) | 16,700원 |
+| 5G | 신규 추가 | 5G 슬림 10GB/200분 | 10,900원 |
+| 5G | 신규 추가 | 5G 슬림 20GB/200분 (6/1) | 18,900원 |
+| 5G | 신규 추가 | 5G 통화 충분 3GB | 8,900원 |
+| 5G | 신규 추가 | 5G 통화 충분 6GB | 11,900원 |
+| 5G | 신규 추가 | 5G 통화 충분 10GB | 14,900원 |
+
+**3. SKY_EXTRA 변경 (MO-14 기준)**
+- 6월 MO-14에서 제외된 5개 항목 삭제:
+  - `SKY 데이터 충분 15GB+/100분(모아진)`
+  - `SKY 모두 충분 11GB+(모아진)`
+  - `SKY 모두 충분 100GB+(모아진)`
+  - `5G 통화 충분 20GB`
+  - `5G 통화 충분 30GB`
+- 6월 SKY_EXTRA 남은 항목: 12개 (모두 20,000원)
+
+**4. 변동 없는 항목**
+- BASE_FEE: 동일 (MO-01 확인)
+- 배정FEE: 동일 (MO-06 확인)
+- GRADE_POLICY: 동일 (MO-02, MO-03 확인)
+- RETAIL_EXTRA_LIST: 동일
+
+**5. 비밀번호 변경**
+- 변경 전: `e20ef9b5...` (`"20260401"` SHA-256)
+- 변경 후: `5856077678deae2bfae7a71271e97bb24337ca249bba1175fe1fa36a30d529e4` (`"20260601"` SHA-256)
+
+### 커밋
+- `b40f499` — feat: 6월 정책 데이터 추가 (2026-06-01)
+- `677dc5c` — fix: 비밀번호 변경 — 20260601 (26년 6월 정책 반영)
+
+---
+
 ## 세션 7 — 2026-05-31 — 정책 날짜 기반 자동 전환 기능 추가
 
 ### 작업 내용
@@ -271,5 +319,13 @@ document.getElementById('mfb-grade').textContent='';
   - `Created by 박정진 | SKY Life 모바일 수수료 계산기`
 - skylife-addons 푸터 스타일 기준으로 전 프로젝트 통일 작업의 일환
 - 커밋: `7a73bb3` — style: 푸터 디자인 통일
+
+---
+
+## 2026-07-20 업데이트 — favicon 통일 (워크스페이스 6개 사이트 공용)
+- 브라우저 탭에서 skylife-guide/TPS는 kt skylife 로고 favicon이 보이는데, 나머지 6개 사이트(skylife-plans, skylife-addons, skylife-commission-calculator, skylife-mobile-faq, mobile-manual, skylife-inquiry)는 favicon 링크 태그 자체가 없어 브라우저 기본(Vercel "V") 아이콘이 노출되던 문제
+- skylife-guide/TPS에 있던 동일한 `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,...">` (kt skylife 빨간 로고 SVG)를 6개 파일 `<title>` 다음 줄에 그대로 추가
+- 커밋: `b42aa47` — kt skylife 로고 favicon 추가 (skylife-commission-calculator)
+- 6개 프로젝트 전체 git push 완료. skylife-inquiry는 Vercel 수동 배포 필요해 `npx vercel deploy --prod` 추가 실행
 
 ---
