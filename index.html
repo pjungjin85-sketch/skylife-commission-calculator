@@ -8,501 +8,30 @@
 <meta http-equiv="Expires" content="0">
 <title>kt skylife 모바일 수수료 계산기</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0id2hpdGUiLz48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjciIGZpbGw9IiNFNjAwMTIiLz48dGV4dCB4PSI1MCIgeT0iNTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjMwIiBmaWxsPSIjMUExQTFBIj5rdDwvdGV4dD48dGV4dCB4PSI1MCIgeT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjIwIiBmaWxsPSIjRTYwMDEyIj5za3lsaWZlPC90ZXh0Pjwvc3ZnPg==">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #FFFFFF;
-  --surface: #FFFFFF;
-  --surface2: #F7F7F7;
-  --accent: #E60012;
-  --accent2: #CC0010;
-  --gold: #f59e0b;
-  --green: #10b981;
-  --text: #1A1A1A;
-  --text-muted: #666666;
-  --muted: #999999;
-  --border: #E8E8E8;
-  --card: #FFFFFF;
-  --radius: 14px;
-  --shadow: 0 2px 12px rgba(0,0,0,0.08);
-  --shadow-hover: 0 6px 24px rgba(0,0,0,0.12);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background: #F7F7F7;
-  color: var(--text);
-  min-height: 100vh;
-}
-
-/* ── 잠금 화면 ── */
-#lock-overlay {
-  position: fixed; inset: 0; z-index: 9999;
-  background: #F7F7F7;
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-#lock-overlay.hidden { display: none; }
-.lock-box {
-  background: #fff;
-  border: 1px solid #E8E8E8;
-  border-top: 3px solid var(--accent);
-  border-radius: 16px;
-  padding: 44px 40px 36px;
-  width: 100%; max-width: 360px;
-  text-align: center;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
-}
-.lock-logo { font-size: 22px; font-weight: 900; color: #1A1A1A; letter-spacing: -.02em; margin-bottom: 20px; display: block; }
-.lock-logo span { color: var(--accent); }
-.lock-logo em { background: var(--accent); color: #fff; font-style: normal; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; letter-spacing: .04em; margin-left: 8px; vertical-align: middle; }
-.lock-icon { font-size: 40px; margin-bottom: 12px; display: block; animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-.lock-title { color: #1A1A1A; font-size: 18px; font-weight: 900; margin-bottom: 4px; }
-.lock-sub { color: #999999; font-size: 12px; margin-bottom: 28px; }
-.lock-input-wrap { position:relative; margin-bottom:12px; }
-.lock-input {
-  width:100%; padding:13px 48px 13px 18px;
-  border-radius:10px; border:1.5px solid #E8E8E8;
-  background:#fff; color:#1A1A1A; font-size:18px;
-  font-family:'DM Mono',monospace; letter-spacing:4px;
-  outline:none; text-align:center;
-  transition: border-color 0.2s;
-}
-.lock-input::placeholder { letter-spacing:2px; font-size:13px; color:#BBBBBB; }
-.lock-input:focus { border-color: var(--accent); }
-.lock-input.error { border-color: var(--accent); animation:shake 0.4s ease; }
-@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
-.toggle-pw { position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:#BBBBBB; cursor:pointer; font-size:18px; transition:color 0.15s; }
-.toggle-pw:hover { color: var(--accent); }
-.lock-btn { width:100%; padding:13px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; font-family:'Noto Sans KR',sans-serif; cursor:pointer; transition:all 0.18s; }
-.lock-btn:hover { background:#CC0010; transform:translateY(-1px); box-shadow:0 4px 16px rgba(230,0,18,0.25); }
-.lock-error { color:var(--accent); font-size:12px; margin-top:10px; height:16px; }
-.lock-footer { margin-top:24px; color:#CCCCCC; font-size:10px; letter-spacing:.5px; border-top:1px solid #F0F0F0; padding-top:16px; }
-
-/* ── 공지 팝업 ── */
-#notice-overlay {
-  position: fixed; inset: 0; z-index: 10000;
-  background: rgba(0,0,0,0.45);
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-#notice-overlay.hidden { display: none; }
-.notice-box {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-top: 4px solid var(--accent);
-  border-radius: 16px;
-  padding: 36px 32px 28px;
-  width: 100%; max-width: 420px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-  cursor: pointer;
-  position: relative;
-}
-.notice-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(230,0,18,.08); border: 1px solid rgba(230,0,18,.25);
-  color: var(--accent); font-size: 10px; font-weight: 700;
-  letter-spacing: .06em; padding: 3px 10px; border-radius: 3px;
-  text-transform: uppercase; margin-bottom: 14px;
-}
-.notice-title {
-  font-size: 17px; font-weight: 900; color: #1A1A1A;
-  letter-spacing: -.02em; margin-bottom: 16px;
-}
-.notice-body {
-  font-size: 14px; color: #333; line-height: 1.75;
-  border-top: 1px solid var(--border); padding-top: 16px;
-  margin-bottom: 20px; white-space: pre-line;
-}
-.notice-close-hint {
-  font-size: 11px; color: #BBBBBB; text-align: center; margin-top: 4px;
-}
-
-/* ── 헤더 ── */
-.header {
-  background: var(--bg);
-  border-top: 3px solid var(--accent);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow);
-}
-.header-left { position:relative; }
-.logo-text{font-size:18px;font-weight:900;color:var(--black);letter-spacing:-.02em;white-space:nowrap;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-.logo-text span:not(.logo-mobile-badge){color:var(--red);}
-.logo-mobile-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:.04em;white-space:nowrap;}
-.header-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(230,0,18,.08); border:1px solid rgba(230,0,18,.25); color:var(--accent); font-size:10px; font-weight:700; letter-spacing:.06em; padding:3px 10px; border-radius:3px; margin-bottom:6px; text-transform:uppercase; }
-.header h1 { color:var(--text); font-size:clamp(15px,3vw,20px); font-weight:900; letter-spacing:-0.5px; }
-.header h1 span { color:var(--accent); }
-.header-right { position:relative; flex-shrink:0; }
-
-/* 헤더 우측 미니 결과창 */
-.header-result {
-  background: rgba(230,0,18,.05);
-  border: 1px solid rgba(230,0,18,.2);
-  border-radius: 8px;
-  padding: 12px 18px;
-  min-width: 300px;
-  text-align: center;
-}
-.hr-label { font-size:10px; color:var(--text-muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
-.hr-amount { font-size:26px; font-weight:900; color:var(--accent); font-family:'DM Mono',monospace; letter-spacing:-1px; line-height:1; }
-.hr-amount span { font-size:13px; font-weight:600; color:var(--accent); }
-.hr-amount.empty { font-size:14px; color:var(--text-muted); font-family:'Noto Sans KR',sans-serif; font-weight:400; }
-.hr-grade { font-size:11px; color:var(--gold); margin-top:4px; font-weight:600; min-height:16px; }
-.header-name { font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:500; letter-spacing:0.3px; }
-
-/* ── 메인 컨테이너 ── */
-.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
-
-/* ── 전체 2열 레이아웃 ── */
-.main-grid {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 16px;
-  align-items: start;
-}
-@media(max-width:800px){ .main-grid { grid-template-columns:1fr; } }
-
-/* 왼쪽 컬럼 */
-.left-col { display: flex; flex-direction: column; gap: 12px; }
-
-/* ── 상단 3단계 가로 배치 ── */
-.top-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-@media(max-width:700px){ .top-steps { grid-template-columns:1fr; } }
-
-.step-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  overflow: hidden;
-  transition: box-shadow 0.2s, opacity 0.2s, border-color 0.2s;
-}
-.step-card:hover { border-color:rgba(230,0,18,.3); box-shadow:var(--shadow-hover); }
-.step-card.locked { opacity:0.4; pointer-events:none; }
-
-.step-header {
-  display:flex; align-items:center; gap:10px;
-  padding:11px 14px;
-  background: rgba(230,0,18,.04);
-  border-bottom: 1px solid var(--border);
-}
-.step-num {
-  width:26px; height:26px; background:var(--accent); color:#fff;
-  border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:700; flex-shrink:0;
-}
-.step-label { font-size:13px; font-weight:700; color:var(--accent); }
-.step-body { padding:14px; }
-
-/* 옵션 버튼 */
-.option-grid { display:flex; flex-wrap:wrap; gap:8px; }
-.opt-btn {
-  flex:1 1 auto; min-width:120px;
-  padding:10px 14px;
-  border:1px solid var(--border); border-radius:8px;
-  background:#FAFAFA; cursor:pointer; text-align:left;
-  transition:all 0.15s; position:relative; color:var(--text);
-}
-.opt-btn:hover { border-color:rgba(230,0,18,.35); background:rgba(230,0,18,.04); }
-.opt-btn.selected {
-  border-color:var(--accent);
-  background:rgba(230,0,18,.06);
-  box-shadow:0 0 0 2px rgba(230,0,18,.15);
-}
-.opt-btn.selected::after { content:'✓'; position:absolute; top:6px; right:8px; color:var(--accent); font-weight:800; font-size:12px; }
-.opt-title { font-size:13px; font-weight:700; color:var(--text); display:block; margin-bottom:1px; }
-.opt-desc  { font-size:10px; color:var(--muted); display:block; }
-.opt-btn.selected .opt-title { color:var(--accent); }
-
-/* ── 하단 요금제 카드 ── */
-.plan-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.plan-card.locked { opacity:0.4; pointer-events:none; }
-
-/* 상품군 탭 */
-.group-tabs {
-  display:flex; flex-wrap:wrap; gap:0;
-  border-bottom:2px solid var(--border);
-  background:#FAFAFA;
-  padding:8px 12px 0;
-}
-.group-tab {
-  padding:7px 12px;
-  font-size:12px; font-weight:700;
-  color:var(--muted);
-  border:none; background:none;
-  cursor:pointer;
-  border-bottom:2px solid transparent;
-  transition:all 0.15s;
-  margin-bottom:-2px;
-}
-.group-tab:hover { color:var(--accent); }
-.group-tab.active {
-  color:var(--accent);
-  border-bottom-color:var(--accent);
-  background:transparent;
-}
-
-/* 요금제 리스트 */
-.plan-list-wrap { padding:14px; }
-.plan-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
-  gap:7px;
-}
-.plan-btn {
-  padding:10px 12px;
-  border:1px solid var(--border);
-  border-radius:8px;
-  background:#FAFAFA; cursor:pointer; text-align:left;
-  transition:all 0.13s; color:var(--text);
-}
-.plan-btn:hover { border-color:rgba(230,0,18,.35); background:rgba(230,0,18,.04); }
-.plan-btn.selected {
-  border-color:var(--accent);
-  background:rgba(230,0,18,.06);
-  box-shadow:0 0 0 2px rgba(230,0,18,.15);
-}
-.plan-name { font-size:11px; font-weight:600; color:var(--text); display:block; margin-bottom:4px; line-height:1.3; }
-.plan-btn.selected .plan-name { color:var(--accent); }
-.plan-price { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; }
-.plan-badge { display:inline-block; font-size:8px; font-weight:700; padding:1px 4px; border-radius:3px; margin-left:3px; vertical-align:middle; }
-.badge-rs  { background:rgba(230,0,18,.1); color:var(--accent); }
-.badge-rm  { background:rgba(16,185,129,.12); color:#059669; }
-.badge-sky { background:rgba(245,158,11,.12); color:#d97706; }
-.badge-vit { background:#0ea5e9; color:#fff; }
-
-/* ── 결과 패널 ── */
-.result-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px 18px;
-  color:var(--text);
-  position: sticky;
-  top: 80px;
-  box-shadow: var(--shadow);
-}
-.result-sec-title {
-  font-size:10px; font-weight:700; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--accent);
-  margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border);
-}
-.result-rows { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
-.result-row {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:9px 12px;
-  background:#F7F7F7;
-  border-radius:6px; border:1px solid var(--border);
-}
-.result-row.hl { background:rgba(230,0,18,.05); border-color:rgba(230,0,18,.18); }
-.result-row.grade-row { background:rgba(245,158,11,.07); border-color:rgba(245,158,11,.22); }
-.grade-val { color:var(--gold) !important; }
-.r-label { font-size:11px; color:var(--text-muted); line-height:1.4; }
-.r-val { font-size:13px; font-weight:700; font-family:'DM Mono',monospace; color:var(--text); white-space:nowrap; margin-left:8px; }
-.r-val.zero { color:rgba(0,0,0,0.2); }
-.result-divider { height:1px; background:var(--border); margin:14px 0; }
-.result-total-label { font-size:10px; color:var(--text-muted); margin-bottom:3px; }
-.result-total { font-size:32px; font-weight:900; font-family:'DM Mono',monospace; color:var(--accent); letter-spacing:-1px; }
-.result-total span { font-size:16px; font-weight:600; color:var(--accent); }
-
-/* 그레이드 섹션 */
-.grade-section-inner { margin-top:18px; }
-.grade-divider { height:1px; background:var(--border); margin-bottom:14px; }
-.grade-sec-title { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
-
-/* 슬라이더 */
-.grade-slider-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.grade-slider-label { font-size:11px; color:var(--text-muted); white-space:nowrap; }
-.grade-count-badge { font-size:13px; font-weight:700; font-family:'DM Mono',monospace; color:var(--accent); white-space:nowrap; }
-input[type=range] {
-  flex:1; -webkit-appearance:none; height:5px; border-radius:3px;
-  background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,0%),#DDD var(--pct,0%),#DDD 100%);
-  outline:none; cursor:pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance:none; width:17px; height:17px; border-radius:50%;
-  background:var(--accent); border:2px solid var(--bg);
-  box-shadow:0 2px 6px rgba(0,0,0,0.2); transition:transform 0.13s;
-}
-input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
-
-.grade-bars { display:flex; gap:4px; margin-bottom:8px; }
-.grade-bar {
-  flex:1; padding:6px 4px; border-radius:6px;
-  border:1px solid var(--border);
-  background:#FAFAFA;
-  text-align:center; transition:all 0.18s;
-  cursor:pointer;
-}
-.grade-bar:hover { border-color:rgba(245,158,11,.4); background:rgba(245,158,11,.07); }
-.grade-bar.active { border-color:var(--gold); background:rgba(245,158,11,.10); }
-.gb-label { font-size:9px; color:var(--text-muted); display:block; }
-.gb-fee   { font-size:10px; font-weight:700; color:var(--text); display:block; margin-top:1px; }
-.grade-bar.active .gb-label { color:var(--gold); }
-.grade-bar.active .gb-fee   { color:var(--gold); }
-
-.grade-result-box { background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.22); border-radius:6px; padding:10px 12px; }
-.grade-result-box .gr-title { font-size:10px; color:var(--text-muted); margin-bottom:6px; }
-.grade-result-table { width:100%; border-collapse:collapse; }
-.grade-result-table td { padding:3px 0; font-size:11px; color:var(--text-muted); }
-.grade-result-table td:last-child { text-align:right; font-weight:700; color:var(--gold); font-family:'DM Mono',monospace; }
-.grade-note-txt { font-size:10px; color:var(--text-muted); opacity:.7; margin-top:8px; line-height:1.5; }
-
-/* TV결합 토글 */
-.tv-toggle-row {
-  display:flex; align-items:center; gap:10px;
-  background:#F7F7F7; border:1px solid var(--border);
-  border-radius:8px; padding:10px 14px; margin-bottom:14px;
-}
-.tv-toggle-label { font-size:12px; color:var(--text); flex:1; }
-.tv-toggle-status { font-size:11px; font-weight:700; color:var(--text-muted); min-width:36px; text-align:right; transition:color 0.2s; }
-.tv-toggle-status.on { color:var(--accent); }
-.tv-switch { position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0; }
-.tv-switch input { opacity:0; width:0; height:0; }
-.tv-slider {
-  position:absolute; cursor:pointer; inset:0;
-  background:#DDD; border-radius:22px; transition:.25s;
-}
-.tv-slider:before {
-  content:""; position:absolute; width:16px; height:16px;
-  left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.25s;
-}
-.tv-switch input:checked + .tv-slider { background:var(--accent); }
-.tv-switch input:checked + .tv-slider:before { transform:translateX(18px); }
-
-/* 혜택 정보 박스 */
-.benefit-box {
-  background: #F8FFFE;
-  border: 1px solid #E0F2FE;
-  border-left: 3px solid #0ea5e9;
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin: 12px 0 4px;
-  font-size: 12px;
-}
-.benefit-box-title {
-  font-size: 10px; font-weight: 700; color: #0ea5e9;
-  letter-spacing: .06em; text-transform: uppercase;
-  margin-bottom: 8px;
-}
-.benefit-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 3px 0;
-  border-bottom: 1px solid #E0F2FE;
-  color: #444;
-}
-.benefit-row:last-child { border-bottom: none; }
-.benefit-label { color: #666; }
-.benefit-val { font-weight: 700; color: #0ea5e9; }
-.benefit-val.none { color: #BBBBBB; font-weight: 400; }
-.benefit-val.vit-o { color: #10b981; }
-.benefit-val.vit-x { color: #BBBBBB; }
-
-.disclaimer { margin-top:14px; padding:8px 10px; background:#F7F7F7; border:1px solid var(--border); border-radius:6px; font-size:9px; color:var(--text-muted); opacity:.8; line-height:1.7; }
-.fee-notice { font-size:9px; color:var(--text-muted); opacity:.7; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-.reset-btn {
-  display:block; width:100%; padding:10px;
-  margin-top:12px; background:#F7F7F7;
-  border:1px solid var(--border); border-radius:8px;
-  color:var(--text-muted); font-size:12px; font-weight:600;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all 0.15s;
-}
-.reset-btn:hover { background:rgba(230,0,18,.06); border-color:rgba(230,0,18,.3); color:var(--accent); }
-
-.empty-state { text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px; }
-.empty-icon  { font-size:28px; margin-bottom:8px; }
-
-@keyframes fadeInUp {
-  from { opacity:0; transform:translateY(10px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-.fade-in { animation:fadeInUp 0.25s ease forwards; }
-
-/* ── 모바일 하단 고정 수수료 바 ── */
-#mobile-fee-bar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 200;
-  background: #fff;
-  border-top: 2px solid var(--accent);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-  padding: 10px 16px 12px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.mfb-left { display: flex; flex-direction: column; }
-.mfb-label { font-size: 11px; color: var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom: 2px; }
-.mfb-amount { font-size: 24px; font-weight: 900; color: var(--accent); font-family: 'DM Mono', monospace; letter-spacing: -1px; line-height: 1; }
-.mfb-amount span { font-size: 13px; font-weight: 600; }
-.mfb-amount.empty { font-size: 13px; color: var(--text-muted); font-family: 'Noto Sans KR', sans-serif; font-weight: 400; }
-.mfb-grade { font-size: 10px; color: var(--gold); font-weight: 600; min-height: 14px; margin-top: 2px; }
-
-/* ── 반응형 ── */
-/* 태블릿: 3단계 → 2열 */
-@media(max-width:960px) {
-  .top-steps { grid-template-columns: repeat(2, 1fr); }
-  .top-steps .step-card:last-child { grid-column: span 2; }
-}
-@media(max-width:700px) {
-  .top-steps { grid-template-columns: 1fr; }
-  .top-steps .step-card:last-child { grid-column: span 1; }
-}
-
-/* 모바일 */
-@media(max-width:640px) {
-  /* 헤더 */
-  .header { padding: 10px 14px; gap: 8px; }
-  .header-right { display: none; }
-  .header h1 { font-size: 15px; }
-  .header-badge { font-size: 9px; }
-
-  /* 모바일 하단 바 노출 */
-  #mobile-fee-bar { display: flex; }
-
-  /* 컨테이너 */
-  .container { padding: 12px 10px 80px; }
-
-  /* 옵션 버튼 */
-  .opt-btn { min-width: 80px; padding: 8px 10px; }
-  .opt-title { font-size: 12px; }
-
-  /* 요금제 그리드 */
-  .plan-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-
-  /* 결과 패널 (모바일 1열 하단 위치) — sticky 해제 */
-  .result-panel { position: static; }
-}
-footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);text-align:center;padding:10px;font-size:11px;color:#666666;z-index:50;}
-</style>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" integrity="sha384-2nNKoOPayicGa+aRguOQuiZP+RqQ4G3jalfDeOgftkKD7zBM2gJXTwcFqCZltdv0" crossorigin="anonymous">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M7.8 10.5V7.3a4.2 4.2 0 0 1 8.4 0v3.2"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.8A8.6 8.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-2.6 3.5M6.3 7.9A16 16 0 0 0 2.5 12S6 18.5 12 18.5a8.8 8.8 0 0 0 3.2-.6"/><path d="M10 10a3 3 0 0 0 4.2 4.2M3.5 3.5l17 17"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.7 20.3a2 2 0 0 1-3.4 0"/><path d="M18 8.5a6 6 0 0 0-12 0c0 6.5-2.5 8.3-2.5 8.3h17S18 15 18 8.5z"/></symbol>
+<symbol id="i-won" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 7.5 17 12 8l4.5 9L20 7.5M3.5 11.5h17"/></symbol>
+<symbol id="i-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16" rx="2"/><path d="M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5v1H9z"/><path d="M9 11h6M9 15h4"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="12.5" rx="2"/><path d="m8 3 4 3.5L16 3"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M11 6.5 12.6 5a4.3 4.3 0 0 1 6.1 6.1L17.2 12.6"/><path d="M12.8 17.4 11.2 19a4.3 4.3 0 0 1-6.1-6.1l1.5-1.5"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V14M9.3 19.5V9M14.7 19.5v-6M20 19.5V5"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 1 2.6 6.1"/><path d="M3.5 19v-5h5"/></symbol>
+</defs></svg>
+
 
 <!-- ══ 잠금 화면 ══ -->
 <div id="lock-overlay">
   <div class="lock-box">
-    <span class="lock-icon">🔐</span>
+    <span class="lock-icon"><svg><use href="#i-lock"></use></svg></span>
     <div class="lock-title">kt skylife 수수료 계산기</div>
     <div class="lock-sub">접근 권한이 필요한 페이지입니다</div>
     <div class="lock-input-wrap">
@@ -511,7 +40,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
              onkeydown="if(event.key==='Enter')checkPw()"
              oninput="document.getElementById('lock-error').textContent=''"
              autocomplete="off">
-      <button class="toggle-pw" id="toggle-btn" onclick="togglePw()">👁</button>
+      <button class="toggle-pw" id="toggle-btn" onclick="togglePw()" aria-label="비밀번호 표시"><svg><use href="#i-eye"></use></svg></button>
     </div>
     <button class="lock-btn" onclick="checkPw()">확인</button>
     <div class="lock-error" id="lock-error"></div>
@@ -522,7 +51,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 <!-- ══ 공지 팝업 ══ -->
 <div id="notice-overlay" class="hidden" onclick="closeNotice()">
   <div class="notice-box" onclick="event.stopPropagation()">
-    <div class="notice-badge">📢 공지</div>
+    <div class="notice-badge"><svg><use href="#i-bell"></use></svg>공지</div>
     <div class="notice-title" id="noticeTitleLabel">정책 안내</div>
     <div class="notice-body" id="noticeBodyLabel">로딩 중...</div>
     <div class="notice-close-hint">아무 곳이나 클릭하면 닫힙니다</div>
@@ -532,7 +61,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 <!-- ══ 헤더 ══ -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-text">kt <span>skylife</span><span class="logo-mobile-badge">MOBILE</span></div>
+    <div class="logo-text">kt <span>skylife</span><span class="logo-mobile-badge">대리점 전용</span></div>
     <div class="header-badge" id="headerBadgeLabel">영업정책</div>
     <h1>모바일 <span>수수료 계산기</span></h1>
   </div>
@@ -574,15 +103,15 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
           <div class="step-body">
             <div class="option-grid">
               <button class="opt-btn" data-type="agency" onclick="selectAgency('소매')">
-                <span class="opt-title">📱 소매</span>
+                <span class="opt-title">소매</span>
                 <span class="opt-desc">일반 소매 채널</span>
               </button>
               <button class="opt-btn" data-type="agency" onclick="selectAgency('CSC')">
-                <span class="opt-title">🏢 CSC</span>
+                <span class="opt-title">CSC</span>
                 <span class="opt-desc">고객센터 특화</span>
               </button>
               <button class="opt-btn" data-type="agency" onclick="selectAgency('도매')">
-                <span class="opt-title">🔄 도매</span>
+                <span class="opt-title">도매</span>
                 <span class="opt-desc">전문 도매 채널</span>
               </button>
 
@@ -599,11 +128,11 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
           <div class="step-body">
             <div class="option-grid">
               <button class="opt-btn" data-type="customer" onclick="selectCustomer('내국인')">
-                <span class="opt-title">🇰🇷 내국인</span>
+                <span class="opt-title">내국인</span>
                 <span class="opt-desc">F비자 포함</span>
               </button>
               <button class="opt-btn" data-type="customer" onclick="selectCustomer('외국인')">
-                <span class="opt-title">🌏 외국인</span>
+                <span class="opt-title">외국인</span>
                 <span class="opt-desc">F비자 제외</span>
               </button>
             </div>
@@ -619,11 +148,11 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
           <div class="step-body">
             <div class="option-grid">
               <button class="opt-btn" data-type="join" onclick="selectJoin('MNP')">
-                <span class="opt-title">🔄 번호이동</span>
+                <span class="opt-title">번호이동</span>
                 <span class="opt-desc">MNP</span>
               </button>
               <button class="opt-btn" data-type="join" onclick="selectJoin('010신규')">
-                <span class="opt-title">✨ 010 신규</span>
+                <span class="opt-title">010 신규</span>
                 <span class="opt-desc">신규 개통</span>
               </button>
             </div>
@@ -649,17 +178,17 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
     <!-- 오른쪽: 수수료 패널 -->
     <div>
       <div class="result-panel">
-        <div class="result-sec-title">💰 수수료 상세</div>
+        <div class="result-sec-title"><svg><use href="#i-won"></use></svg>수수료 상세</div>
 
         <div id="result-empty" class="empty-state">
-          <div class="empty-icon">📋</div>
+          <div class="empty-icon"><svg><use href="#i-clipboard"></use></svg></div>
           <div>1~4단계를 선택하면<br>수수료가 표시됩니다</div>
         </div>
 
         <div id="result-content" style="display:none">
           <!-- TV결합 토글 -->
           <div class="tv-toggle-row">
-            <span class="tv-toggle-label">📺 TV결합</span>
+            <span class="tv-toggle-label"><svg><use href="#i-tv"></use></svg>TV결합</span>
             <label class="tv-switch">
               <input type="checkbox" id="tv-checkbox" onchange="toggleTV(this.checked)">
               <span class="tv-slider"></span>
@@ -674,7 +203,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
 
           <!-- 혜택 정보 -->
           <div id="benefit-info" class="benefit-box" style="display:none">
-            <div class="benefit-box-title">📡 결합·혜택 정보</div>
+            <div class="benefit-box-title"><svg><use href="#i-link"></use></svg>결합·혜택 정보</div>
             <div class="benefit-row">
               <span class="benefit-label">누구나결합 추가 데이터</span>
               <span class="benefit-val" id="bi-nungu">—</span>
@@ -696,7 +225,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
           <!-- 그레이드 -->
           <div class="grade-section-inner" id="grade-section">
             <div class="grade-divider"></div>
-            <div class="grade-sec-title">📈 이번달 실적 (그레이드)</div>
+            <div class="grade-sec-title"><svg><use href="#i-chart"></use></svg>이번달 실적 (그레이드)</div>
 
             <div class="grade-slider-row">
               <span class="grade-slider-label">개통 건수</span>
@@ -719,7 +248,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
           </div>
         </div>
 
-        <button class="reset-btn" onclick="resetAll()">↺ 초기화</button>
+        <button class="reset-btn" onclick="resetAll()"><svg><use href="#i-reset"></use></svg>초기화</button>
       </div>
     </div>
 
@@ -767,7 +296,7 @@ async function checkPw(){
     setTimeout(()=>inp.classList.remove('error'),500);
   }
 }
-function togglePw(){const i=document.getElementById('pw-input'),b=document.getElementById('toggle-btn');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';}
+function togglePw(){const i=document.getElementById('pw-input'),b=document.getElementById('toggle-btn');i.type=i.type==='password'?'text':'password';b.querySelector('use').setAttribute('href', i.type==='password'?'#i-eye':'#i-eye-off');}
 if(sessionStorage.getItem('skylife_auth')==='1'){
   document.getElementById('lock-overlay').classList.add('hidden');
   // showNoticeIfNeeded는 fetch 완료 후 DOMContentLoaded에서 호출
@@ -937,7 +466,7 @@ function buildGradeBars(){
     el.appendChild(d);
   });
   const noteMap={'소매':'RS+RM 전체 실적 기준 · 당월해지 제외','CSC':'RS+RM 기준 · 당월해지 제외','도매':'RS 요금제만 산정 (RM 제외)'};
-  document.getElementById('grade-note').textContent='ℹ️ '+(noteMap[S.agency]||'');
+  document.getElementById('grade-note').textContent=(noteMap[S.agency]||'');
 }
 
 function getCurrentGrade(){

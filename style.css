@@ -1,0 +1,369 @@
+@charset "UTF-8";
+/* ============================================================
+   skylife-commission-calculator — 수수료 계산기
+   공통 토큰·컴포넌트는 base.css. 이 파일은 이 페이지 전용.
+   ============================================================ */
+
+body{background:var(--bg2);}
+.container{max-width:var(--wrap);margin:0 auto;padding:var(--s-5) var(--s-5) var(--s-9);}
+
+/* 헤더 — .header 안에 header-left / header-right 가 나란히 있다 */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);
+  border-top:3px solid var(--red);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:var(--s-4);
+  padding:10px max(var(--s-5), calc((100% - var(--wrap)) / 2));
+  min-height:68px;
+}
+.header-left{display:flex;align-items:center;gap:var(--s-3);min-width:0;flex-wrap:wrap;}
+.header-left h1{
+  font-size:var(--t-h3);font-weight:700;color:var(--black);
+  letter-spacing:-.025em;white-space:nowrap;
+}
+.header-left h1 span{color:var(--black);}
+.header-name{font-size:var(--t-sm);font-weight:600;color:var(--dark);white-space:nowrap;}
+.header-right{margin-left:auto;flex-shrink:0;}
+.header-result{text-align:right;display:flex;flex-direction:column;gap:1px;}
+.hr-label{font-size:11px;color:var(--light);line-height:1.3;}
+.hr-amount{
+  font-size:var(--t-h3);font-weight:800;color:var(--red);
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.25;
+}
+.hr-amount.empty{font-size:var(--t-sm);font-weight:600;color:var(--light);letter-spacing:0;}
+.hr-grade{font-size:11px;color:var(--mid);line-height:1.4;}
+.fee-notice{font-size:10.5px;color:var(--light);line-height:1.4;max-width:34ch;}
+.logo-mobile-badge{
+  background:var(--bg2);color:var(--mid);border:1px solid var(--border);
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);
+  white-space:nowrap;margin-left:7px;
+}
+.reset-btn{
+  padding:8px 14px;border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-xs);font-weight:600;color:var(--mid);background:var(--bg);
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;
+  transition:border-color var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease);
+}
+.reset-btn svg{width:14px;height:14px;}
+.reset-btn:hover{border-color:var(--light);color:var(--black);}
+
+/* ============================================================
+   레이아웃
+   ============================================================ */
+.main-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:var(--s-4);align-items:start;}
+.left-col{display:flex;flex-direction:column;gap:var(--s-4);}
+.top-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-3);}
+
+/* ============================================================
+   단계 카드
+   ============================================================ */
+.step-card,.plan-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;
+  transition:opacity var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.step-card.locked,.plan-card.locked{opacity:.45;pointer-events:none;}
+.step-header{
+  display:flex;align-items:center;gap:10px;
+  padding:var(--s-3) var(--s-4);
+  border-bottom:1px solid var(--border);
+}
+.step-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--bg2);color:var(--dark);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:var(--t-xs);font-weight:700;flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.step-card:not(.locked) .step-num{background:var(--black);color:#fff;border-color:var(--black);}
+.step-label{font-size:var(--t-sm);font-weight:700;color:var(--black);letter-spacing:-.02em;}
+.step-body{padding:var(--s-4);}
+
+/* 선택 버튼 */
+.option-grid{display:flex;flex-wrap:wrap;gap:var(--s-2);}
+.opt-btn{
+  flex:1 1 auto;min-width:118px;
+  padding:11px 14px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);cursor:pointer;text-align:left;color:var(--dark);
+  position:relative;
+  transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.opt-btn:hover{border-color:var(--light);background:var(--bg2);}
+.opt-btn.selected{border-color:var(--black);background:var(--bg);box-shadow:inset 0 0 0 1px var(--black);}
+.opt-title{font-size:var(--t-sm);font-weight:700;color:var(--black);display:block;}
+.opt-desc{font-size:var(--t-xs);color:var(--light);display:block;margin-top:1px;}
+
+/* ============================================================
+   요금제 선택
+   ============================================================ */
+.group-tabs{
+  display:flex;flex-wrap:wrap;gap:var(--s-4);
+  border-bottom:1px solid var(--border);
+  padding:var(--s-3) var(--s-4) 0;
+}
+.group-tab{
+  padding:0 0 10px;font-size:var(--t-sm);font-weight:600;color:var(--light);
+  border:none;background:none;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+  transition:color var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease);
+}
+.group-tab:hover{color:var(--dark);}
+.group-tab.active{color:var(--black);border-bottom-color:var(--red);}
+
+.plan-list-wrap{padding:var(--s-4);}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:var(--s-2);}
+.plan-btn{
+  padding:11px 13px;border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--bg);cursor:pointer;text-align:left;color:var(--dark);
+  transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.plan-btn:hover{border-color:var(--light);background:var(--bg2);}
+.plan-btn.selected{border-color:var(--black);box-shadow:inset 0 0 0 1px var(--black);}
+.plan-name{font-size:var(--t-xs);font-weight:600;color:var(--black);display:block;margin-bottom:3px;line-height:1.4;}
+.plan-price{font-size:var(--t-xs);color:var(--mid);font-variant-numeric:tabular-nums;}
+.plan-badge{
+  display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;
+  border-radius:var(--r-pill);margin-left:4px;vertical-align:middle;white-space:nowrap;
+}
+.badge-rs{background:var(--bg2);color:var(--dark);border:1px solid var(--border);}
+.badge-rm{background:var(--bg2);color:var(--light);border:1px solid var(--border);}
+.badge-sky{background:var(--red-light);color:var(--red);border:1px solid var(--red-border);}
+.badge-vit{background:var(--black);color:#fff;}
+
+/* ============================================================
+   결과 패널 — 이 페이지에서 빨강을 쓰는 곳은 총액 하나
+   ============================================================ */
+.result-panel{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:var(--s-5);position:sticky;top:76px;
+}
+.result-sec-title{
+  font-size:var(--t-sm);font-weight:700;color:var(--black);letter-spacing:-.02em;
+  margin-bottom:var(--s-4);padding-bottom:var(--s-2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:7px;
+}
+.result-sec-title svg{width:15px;height:15px;color:var(--light);}
+.result-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--s-4);}
+.result-row{
+  display:flex;justify-content:space-between;align-items:center;gap:var(--s-3);
+  padding:10px 13px;background:var(--bg2);border-radius:var(--r-md);
+}
+.result-row.hl{background:var(--red-light);}
+.result-row.grade-row{background:var(--bg2);}
+.r-label{font-size:var(--t-xs);color:var(--mid);line-height:1.4;}
+.r-val{font-size:var(--t-sm);font-weight:700;color:var(--black);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.r-val.zero{color:var(--light);}
+.grade-val{color:var(--black) !important;}
+.result-divider{height:1px;background:var(--border);margin:var(--s-4) 0;}
+.result-total-label{font-size:var(--t-xs);color:var(--mid);margin-bottom:3px;}
+.result-total{
+  font-size:34px;font-weight:800;color:var(--red);
+  letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1.1;
+}
+.result-total span{font-size:17px;font-weight:600;}
+
+.empty-state{text-align:center;padding:var(--s-6) var(--s-3);color:var(--light);}
+.empty-icon{display:flex;justify-content:center;margin-bottom:var(--s-3);}
+.empty-icon svg{width:34px;height:34px;color:var(--border);}
+
+/* TV결합 토글 */
+.tv-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--border);}
+.tv-toggle-label{font-size:var(--t-sm);font-weight:600;color:var(--dark);display:flex;align-items:center;gap:7px;}
+.tv-toggle-label svg{width:15px;height:15px;color:var(--light);}
+.tv-toggle-status{font-size:var(--t-xs);color:var(--light);}
+.tv-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;}
+.tv-switch input{opacity:0;width:0;height:0;position:absolute;}
+.tv-slider{
+  position:absolute;inset:0;border-radius:var(--r-pill);
+  background:var(--border);cursor:pointer;
+  transition:background var(--dur-fast) var(--ease);
+}
+.tv-slider::before{
+  content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;
+  border-radius:50%;background:var(--bg);
+  transition:transform var(--dur-fast) var(--ease);
+}
+.tv-switch input:checked + .tv-slider{background:var(--black);}
+.tv-switch input:checked + .tv-slider::before{transform:translateX(18px);}
+.tv-switch input:focus-visible + .tv-slider{outline:2px solid var(--red);outline-offset:2px;}
+
+/* 결합·혜택 정보 */
+.benefit-box{background:var(--bg2);border-radius:var(--r-md);padding:var(--s-3) var(--s-4);margin-top:var(--s-4);}
+.benefit-box-title{font-size:var(--t-xs);font-weight:700;color:var(--black);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.benefit-box-title svg{width:14px;height:14px;color:var(--light);}
+.benefit-row{display:flex;justify-content:space-between;gap:var(--s-3);font-size:var(--t-xs);padding:3px 0;}
+.benefit-label{color:var(--mid);}
+.benefit-val{color:var(--black);font-weight:600;text-align:right;}
+
+/* ============================================================
+   그레이드 (이번달 실적)
+   ============================================================ */
+.grade-section-inner{margin-top:var(--s-5);}
+.grade-divider{height:1px;background:var(--border);margin-bottom:var(--s-4);}
+.grade-sec-title{
+  font-size:var(--t-xs);font-weight:700;color:var(--black);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.grade-sec-title svg{width:14px;height:14px;color:var(--light);}
+.grade-slider-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.grade-slider-label{font-size:var(--t-xs);color:var(--mid);white-space:nowrap;}
+.grade-count-badge{font-size:var(--t-sm);font-weight:700;color:var(--black);white-space:nowrap;font-variant-numeric:tabular-nums;margin-left:auto;}
+.grade-bars{display:flex;gap:4px;margin-bottom:var(--s-2);}
+.grade-bar{
+  flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--bg);cursor:pointer;text-align:center;
+  transition:border-color var(--dur-fast) var(--ease),background var(--dur-fast) var(--ease);
+}
+.grade-bar:hover{border-color:var(--light);background:var(--bg2);}
+.grade-bar.active{border-color:var(--black);background:var(--bg2);}
+.gb-label{display:block;font-size:10px;color:var(--mid);font-weight:600;}
+.gb-fee{display:block;font-size:10px;color:var(--light);font-variant-numeric:tabular-nums;margin-top:1px;}
+.grade-bar.active .gb-label,.grade-bar.active .gb-fee{color:var(--black);}
+.grade-result-box{background:var(--bg2);border-radius:var(--r-md);padding:10px 13px;}
+.grade-result-box .gr-title{font-size:var(--t-xs);color:var(--mid);margin-bottom:5px;}
+.grade-result-table{width:100%;font-size:var(--t-xs);}
+.grade-result-table td{padding:3px 0;color:var(--dark);line-height:1.5;}
+.grade-result-table td:last-child{text-align:right;font-weight:700;color:var(--black);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.grade-note-txt{font-size:11px;color:var(--light);line-height:1.6;margin-top:7px;}
+
+/* 슬라이더 — JS가 --pct를 직접 설정해 채움 정도를 표현한다 (프로젝트 규칙) */
+.grade-slider-row input[type=range]{
+  flex:1;min-width:0;-webkit-appearance:none;appearance:none;
+  height:5px;border-radius:3px;outline:none;cursor:pointer;
+  background:linear-gradient(to right,
+    var(--black) 0%, var(--black) var(--pct,0%),
+    var(--border) var(--pct,0%), var(--border) 100%);
+}
+.grade-slider-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:17px;height:17px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--black);cursor:pointer;
+  transition:transform var(--dur-fast) var(--ease);
+}
+.grade-slider-row input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+.grade-slider-row input[type=range]::-moz-range-thumb{
+  width:17px;height:17px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--black);cursor:pointer;
+}
+
+/* ============================================================
+   공지 · 안내
+   ============================================================ */
+#notice-overlay{
+  position:fixed;inset:0;background:rgba(26,26,26,.5);z-index:2000;
+  display:flex;align-items:center;justify-content:center;padding:var(--s-5);
+}
+#notice-overlay.hidden{display:none;}
+.notice-box{
+  background:var(--bg);border-radius:var(--r-lg);width:100%;max-width:460px;
+  box-shadow:var(--shadow-hover);padding:var(--s-5);
+}
+.notice-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:var(--t-xs);font-weight:700;color:var(--red);
+  background:var(--red-light);border:1px solid var(--red-border);
+  padding:3px 10px;border-radius:var(--r-pill);margin-bottom:var(--s-3);
+}
+.notice-badge svg{width:13px;height:13px;}
+.notice-title{font-size:var(--t-h3);font-weight:700;color:var(--black);margin-bottom:var(--s-2);letter-spacing:-.02em;}
+.notice-body{font-size:var(--t-sm);color:var(--dark);line-height:1.8;white-space:pre-wrap;}
+.notice-close-hint{font-size:var(--t-xs);color:var(--light);text-align:center;margin-top:var(--s-4);}
+
+.disclaimer{font-size:11px;color:var(--light);line-height:1.7;margin-top:var(--s-5);text-align:center;}
+
+/* ============================================================
+   잠금 화면 (비밀번호)
+   ============================================================ */
+.lock-icon{display:flex;justify-content:center;margin-bottom:var(--s-3);}
+.lock-icon svg{width:30px;height:30px;color:var(--red);}
+.lock-title{font-size:var(--t-h3);font-weight:700;color:var(--black);text-align:center;letter-spacing:-.02em;}
+.lock-input-wrap{position:relative;margin-top:var(--s-4);}
+.lock-input{
+  width:100%;padding:12px 44px 12px 14px;
+  border:1px solid var(--border);border-radius:var(--r-md);
+  font-size:var(--t-sm);outline:none;color:var(--black);background:var(--bg);
+  transition:border-color var(--dur-fast) var(--ease);
+}
+.lock-input:focus{border-color:var(--black);}
+.toggle-pw{
+  position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--light);padding:6px;line-height:0;
+}
+.toggle-pw svg{width:18px;height:18px;}
+.toggle-pw:hover{color:var(--black);}
+.lock-btn{
+  width:100%;padding:13px;margin-top:var(--s-3);
+  background:var(--red);color:#fff;border:none;border-radius:var(--r-md);
+  font-size:var(--t-body);font-weight:700;cursor:pointer;
+  transition:background var(--dur-fast) var(--ease);
+}
+.lock-btn:hover{background:var(--red2);}
+.lock-error{font-size:var(--t-sm);color:var(--red);text-align:center;min-height:18px;margin-top:10px;}
+.lock-footer{font-size:var(--t-xs);color:var(--light);text-align:center;margin-top:var(--s-4);line-height:1.6;}
+
+/* ============================================================
+   모바일 하단 요금 바
+   ============================================================ */
+#mobile-fee-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  padding:11px var(--s-4) calc(11px + env(safe-area-inset-bottom));
+  align-items:center;justify-content:space-between;gap:10px;
+}
+.mfb-left{min-width:0;}
+.mfb-label{font-size:11px;color:var(--mid);}
+.mfb-grade{font-size:11px;color:var(--light);}
+.mfb-amount{font-size:19px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums;letter-spacing:-.03em;}
+.hr-label,.hr-grade{font-size:11px;color:var(--mid);}
+.hr-amount{font-size:var(--t-sm);font-weight:700;color:var(--black);font-variant-numeric:tabular-nums;}
+
+/* ============================================================
+   반응형
+   ============================================================ */
+@media(max-width:960px){
+  .main-grid{grid-template-columns:1fr;}
+  .result-panel{position:static;}
+}
+@media(max-width:768px){
+  .header{padding:var(--s-2) var(--s-4);min-height:56px;gap:var(--s-2);}
+  .header-left h1{font-size:var(--t-sm);}
+  .header-name,.header-right{display:none;}
+  .logo-mobile-badge{display:none;}
+  .container{padding:var(--s-4) var(--s-4) 96px;}
+  .top-steps{grid-template-columns:1fr;}
+  .plan-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  #mobile-fee-bar{display:flex;}
+  .result-total{font-size:30px;}
+}
+@media(max-width:480px){
+  .container{padding:var(--s-3) var(--s-3) 96px;}
+  .opt-btn{min-width:0;flex:1 1 100%;}
+  .plan-grid{grid-template-columns:1fr;}
+}
+
+/* ============================================================
+   상태 애니메이션 (기존 동작 유지)
+   ============================================================ */
+.lock-input.error{border-color:var(--red);animation:shake .4s var(--ease);}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.fade-in{animation:fadeInUp var(--dur) var(--ease-out) forwards;}
+
+/* 고정 푸터 (기존 레이아웃 유지) */
+footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  background:var(--bg);border-top:1px solid var(--border);
+  text-align:center;padding:10px;font-size:var(--t-xs);color:var(--light);
+}
+@media(max-width:768px){footer{display:none;}}
+
+/* 그레이드 산정 기준 안내 — 앞에 조용한 표식 */
+.grade-note-txt{position:relative;padding-left:12px;}
+.grade-note-txt::before{
+  content:'';position:absolute;left:0;top:9px;
+  width:4px;height:4px;border-radius:50%;background:var(--light);
+}
+
+/* 금액이 아직 없을 때는 강조하지 않는다 */
+.mfb-amount.empty{font-size:var(--t-sm);font-weight:600;color:var(--light);letter-spacing:0;}
