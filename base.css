@@ -3,10 +3,14 @@
    kt skylife 공통 디자인 시스템
    Created by 박정진
    ------------------------------------------------------------
-   이 파일은 5개 페이지가 동일하게 쓴다. 고칠 때는 한 곳에서 고치고
-   나머지 저장소로 그대로 복사할 것. 페이지별 스타일은 style.css에.
-     skylife-guide / skylife-plans / skylife-commission-calculator
+   아래 4개 저장소가 이 파일을 동일하게 쓴다. 고칠 때는 한 곳에서 고치고
+   나머지로 그대로 복사할 것 (shasum으로 동일성 확인). 페이지별 스타일은
+   각 저장소의 style.css에 둔다.
+     skylife-plans / skylife-commission-calculator
      skylife-addons / skylife-mobile-faq
+
+   skylife-guide는 아직 분리 전이라 자체 style.css 하나에 토큰까지
+   들어 있다. 토큰을 바꾸면 그쪽도 같이 고쳐야 한다.
    ============================================================ */
 
 :root{
